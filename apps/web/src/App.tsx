@@ -1,3 +1,9 @@
+/**
+ * App.tsx — the app shell: jade-themed header + the full-height MapView, with a
+ * toast layer for non-blocking errors. Owns the toast queue (useToasts) and hands
+ * MapView an onError callback so map/zone failures surface as toasts instead of
+ * crashing. The map is where v0.1 lives (zones + index overlays); this is the frame.
+ */
 import React from "react";
 import "./tokens.css";
 import { MapView } from "./components/MapView.js";
