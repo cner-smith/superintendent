@@ -1,51 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import "./tokens.css";
 import { MapView } from "./components/MapView.js";
-
-interface HealthResponse {
-  status: "ok" | "degraded";
-  db: string;
-  ts: string;
-}
+import { ToastList, useToasts } from "./components/Toast.js";
+import appStyles from "./App.module.css";
 
 export default function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then(async (res) => {
-        const json = (await res.json()) as HealthResponse;
-        setHealth(json);
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      });
-  }, []);
+  const { items, push, dismiss } = useToasts();
 
   return (
-    <div style={{ fontFamily: "sans-serif", padding: "1rem" }}>
-      <h1>Superintendent</h1>
+    <div className={appStyles.shell}>
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header className={appStyles.header}>
+        <div className={appStyles.glyph} aria-hidden="true" />
+        <div className={appStyles.headerText}>
+          <div className={appStyles.headerKick}>Conservation · Drone Monitoring</div>
+          <h1 className={appStyles.headerTitle}>Superintendent</h1>
+        </div>
+      </header>
 
-      <section>
-        <h2>API Health</h2>
-        {error && <p style={{ color: "red" }}>Error: {error}</p>}
-        {!health && !error && <p>Checking...</p>}
-        {health && (
-          <dl>
-            <dt>Status</dt>
-            <dd>{health.status}</dd>
-            <dt>Database</dt>
-            <dd>{health.db}</dd>
-            <dt>Server time</dt>
-            <dd>{health.ts}</dd>
-          </dl>
-        )}
-      </section>
+      {/* ── Map ─────────────────────────────────────────────────────────── */}
+      <main className={appStyles.main}>
+        <MapView onError={(msg) => push("error", msg)} />
+      </main>
 
-      <section>
-        <h2>Map (placeholder)</h2>
-        <MapView />
-      </section>
+      {/* ── Non-blocking toasts ─────────────────────────────────────────── */}
+      <ToastList items={items} onDismiss={dismiss} />
     </div>
   );
 }
