@@ -10,35 +10,47 @@ export interface AuditEntry {
 }
 
 /**
- * withAudit — transaction wrapper that enforces the audit-log rule.
- *
- * STUB: The transaction logic will be wired to a real Drizzle transaction
- * once the DB client is confirmed live (Phase 2). For now it calls the
- * callback and appends an audit row — demonstrating the intended contract.
+ * TransactionalDbClient widens DbClient to expose the postgres-js
+ * `.transaction()` method that Drizzle passes through.  We keep the
+ * narrower DbClient alias in db.ts for ordinary queries and only require
+ * the wider type here so that callers remain unchanged.
+ */
+export type TransactionalDbClient = DbClient & {
+  transaction<T>(
+    fn: (tx: DbClient) => Promise<T>,
+    config?: { isolationLevel?: string; accessMode?: string; deferrable?: boolean },
+  ): Promise<T>;
+};
+
+/**
+ * withAudit — real Drizzle transaction wrapper that enforces the audit-log rule.
  *
  * ARCHITECTURAL RULE (from design spec):
  *   Every domain write (INSERT / UPDATE / DELETE on any table except
  *   audit_log itself) MUST be wrapped in withAudit(). No direct writes
  *   outside this helper are permitted in Hono route handlers.
  *
- * TODO (Phase 2): Replace the two sequential queries below with a real
- *   db.transaction(async (tx) => { ... }) call so both writes are atomic.
+ * Atomicity: the domain work (fn) and the audit_log INSERT execute inside
+ * a single db.transaction() call so they commit or roll back together.
+ * The callback receives the transaction handle (tx: DbClient) — callers
+ * must use it for all writes within the block.
  */
 export async function withAudit<T>(
-  db: DbClient,
+  db: TransactionalDbClient,
   entry: AuditEntry,
-  fn: (db: DbClient) => Promise<T>,
+  fn: (tx: DbClient) => Promise<T>,
 ): Promise<T> {
-  // TODO(phase-2): wrap in db.transaction() for atomicity
-  const result = await fn(db);
+  return db.transaction(async (tx) => {
+    const result = await fn(tx);
 
-  await db.insert(auditLog).values({
-    actor: entry.actor,
-    action: entry.action,
-    entity: entry.entity,
-    entityId: entry.entityId,
-    detail: entry.detail ?? null,
+    await tx.insert(auditLog).values({
+      actor: entry.actor,
+      action: entry.action,
+      entity: entry.entity,
+      entityId: entry.entityId,
+      detail: entry.detail ?? null,
+    });
+
+    return result;
   });
-
-  return result;
 }

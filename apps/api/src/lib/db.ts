@@ -1,4 +1,5 @@
 import { createDbClient, type DbClient } from "@superintendent/db";
+import type { TransactionalDbClient } from "./audit.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (!databaseUrl) {
@@ -7,7 +8,11 @@ if (!databaseUrl) {
 
 const { db, queryClient } = createDbClient(databaseUrl);
 
+// The postgres-js Drizzle adapter exposes .transaction() at runtime.
+// We assert the widened type here so route handlers can pass `db`
+// directly to withAudit() without casting at every call site.
 // Typed explicitly to avoid TS2742 "cannot be named without reference to..."
-const typedDb: DbClient = db;
+const typedDb = db as unknown as TransactionalDbClient;
 
 export { typedDb as db, queryClient };
+export type { DbClient, TransactionalDbClient };
