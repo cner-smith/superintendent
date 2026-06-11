@@ -1,0 +1,15 @@
+# spike artifacts — never commit these (keep only indices.py + this file)
+.venv/
+*.tif
+*.tiff
+*.tfw
+*.zip
+*.aux.xml
+*.ovr
+*.kml
+*.kmz
+rgb_sample/
+out/
+*.html
+erl_crash.dump
+__pycache__/

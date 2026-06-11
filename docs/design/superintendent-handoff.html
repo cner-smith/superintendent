@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Superintendent — Handoff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=sentient@400,500,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#d3e8da; --panel:#e0f0e6; --card:#eaf6ee; --raise:#c2dccb;
+  --ink:#18291f; --ink-2:#4c6c5a; --ink-3:rgba(24,41,31,.56); --ink-4:rgba(24,41,31,.34);
+  --line:rgba(24,41,31,.13); --line-2:rgba(24,41,31,.24);
+  --con:#138a63; --man:#c4870f; --gol:#db4f27; --green:#2fa268;
+  --teal:#138a63; --cyan:#1f8e9e; --coral:#db4f27; --gold:#b8881a; --pink:#cc4f72;
+  --display:"Unbounded","Arial Black",sans-serif; --body:"Sentient",Georgia,serif; --mono:"Space Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.55;
+  background-image:radial-gradient(100% 70% at 85% -10%,rgba(19,138,99,.10),transparent 55%),radial-gradient(90% 70% at 5% 105%,rgba(47,162,104,.12),transparent 55%);
+  background-attachment:fixed;}
+.wrap{max-width:940px;margin:0 auto;padding:64px 48px 100px;}
+.mono{font-family:var(--mono)}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3)}
+
+/* cover */
+.cover{border-bottom:2px solid var(--ink);padding-bottom:34px;margin-bottom:14px}
+.glyph{width:46px;height:46px;border:2.5px solid var(--con);display:grid;place-items:center;margin-bottom:26px}
+.glyph::after{content:"";width:16px;height:16px;border-radius:50%;background:var(--con)}
+h1.title{font-family:var(--display);font-weight:900;font-size:clamp(46px,8vw,84px);line-height:.86;letter-spacing:-.045em;text-transform:uppercase}
+.sub{font-size:19px;color:var(--ink-2);max-width:620px;margin-top:20px;line-height:1.5}
+.cover-meta{display:flex;gap:30px;margin-top:26px;flex-wrap:wrap}
+.cover-meta div{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+.cover-meta b{color:var(--ink);font-weight:700}
+
+/* section */
+section{margin-top:56px}
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+.sec-h .n{font-family:var(--display);font-weight:900;font-size:14px;color:var(--accent,var(--con))}
+.sec-h h2{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;text-transform:uppercase}
+.sec-h .r{flex:1;height:2px;background:var(--line-2)}
+.lead{font-size:16px;color:var(--ink-2);max-width:680px;margin-bottom:26px}
+
+/* realm band */
+.realm-band{display:flex;align-items:center;gap:14px;padding:18px 22px;border:1px solid var(--line-2);border-left:5px solid var(--accent);border-radius:3px;background:var(--card);margin:34px 0 22px}
+.realm-band .rb-ico{width:38px;height:38px;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center;flex:none}
+.realm-band .rb-name{font-family:var(--display);font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:-.01em}
+.realm-band .rb-sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.realm-band .rb-tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700}
+
+/* tool card */
+.tool{border:1px solid var(--line);border-radius:3px;background:var(--card);padding:20px 22px;margin-bottom:14px}
+.tool .t-head{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.tool .t-num{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700;border:1px solid var(--line-2);padding:2px 8px;border-radius:2px;flex:none}
+.tool .t-name{font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:-.01em}
+.tool .t-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:3px 9px;border:1px solid var(--line);border-radius:2px}
+.tool p{font-size:15px;color:var(--ink);margin-bottom:10px}
+.tool .angle{font-size:14px;color:var(--ink-2);border-left:2px solid var(--accent);padding-left:13px;margin:12px 0}
+.tool .angle b{color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:3px;font-weight:700}
+.tool .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.tool .links span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);padding:3px 9px;border-radius:2px}
+.tool .links span::before{content:"↳ ";color:var(--accent)}
+
+/* feature list */
+ul.feat{list-style:none;margin:6px 0 0}
+ul.feat li{position:relative;padding-left:20px;font-size:14.5px;color:var(--ink);margin-bottom:7px}
+ul.feat li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;background:var(--accent);border-radius:50%}
+
+/* inline */
+strong.h{color:var(--ink);font-weight:700}
+em.term{font-style:normal;font-family:var(--mono);font-size:.88em;background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:2px}
+
+/* two-col grid for shell pieces */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.mini{border:1px solid var(--line);border-radius:3px;background:var(--card);padding:16px 18px}
+.mini h4{font-family:var(--display);font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:-.005em;margin-bottom:8px}
+.mini p{font-size:13.5px;color:var(--ink-2)}
+
+/* tech */
+.tech{border:1px solid var(--line-2);border-radius:3px;background:var(--card);padding:22px 24px}
+.tech h4{font-family:var(--display);font-weight:800;font-size:14px;text-transform:uppercase;margin:16px 0 8px}
+.tech h4:first-child{margin-top:0}
+.tech code{font-family:var(--mono);font-size:12.5px;background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:2px;color:var(--con)}
+.tech p{font-size:14px;color:var(--ink);margin-bottom:8px}
+.filetree{font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:16px 18px;margin-top:8px;white-space:pre-wrap}
+.filetree b{color:var(--ink)}
+
+.foot{margin-top:60px;padding-top:24px;border-top:1px solid var(--line-2);font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+@media print{
+  body{background:#fff}
+  .wrap{padding:0}
+  section{break-inside:avoid}
+  .tool,.realm-band,.mini,.tech{break-inside:avoid}
+}
+svg.ic{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="glyph"></div>
+    <div class="kick" style="margin-bottom:14px">Product Handoff · v3</div>
+    <h1 class="title">Super&shy;intendent</h1>
+    <p class="sub">A management platform for low-input, native-ecology golf courses — structured as three connected worlds you move between: <strong class="h">Conservation</strong>, <strong class="h">Management</strong>, and <strong class="h">Golf</strong>. This document walks every tool, what it does, and why it earns its place.</p>
+    <div class="cover-meta">
+      <div><b>23</b> facilities</div>
+      <div><b>3</b> realms</div>
+      <div><b>20+</b> purpose-built tools</div>
+      <div>Pine Hollow Estate · <b>18.4 ac</b></div>
+    </div>
+  </div>
+
+  <!-- CONCEPT -->
+  <section>
+    <div class="sec-h"><span class="n">00</span><h2>The Idea</h2><span class="r"></span></div>
+    <p class="lead">Existing course-management software assumes conventional turf — synthetic inputs, calendar-driven maintenance, golf as the whole story. Superintendent is built for the opposite: native grasses, no synthetic chemicals, and a course that is also a working ecological system. To keep that legible, the product is organized like a farm-and-town management sim — three thematic "realms," each a board of facilities you enter and operate.</p>
+    <div class="grid2">
+      <div class="mini"><h4 style="color:var(--con)">Conservation</h4><p>The living land. Sensors, water, wetland, sod farm, compost, apiary, drone &amp; weather, and the universities studying it all.</p></div>
+      <div class="mini"><h4 style="color:var(--man)">Management</h4><p>The operation. Inventory, crew, schedules, events, the books, and compliance-gated suppliers.</p></div>
+      <div class="mini"><h4 style="color:var(--gol)">Golf</h4><p>The play. Tee sheet, pro shop, cart GPS, and a membership program wired into the conservation work.</p></div>
+      <div class="mini"><h4>Why a sim?</h4><p>The realms aren't cosmetic. Decisions cascade between them — a booking blocks the tee sheet and staffs the crew; drone stress confirms a soil sensor; member hours fund the land.</p></div>
+    </div>
+  </section>
+
+  <!-- SHELL -->
+  <section>
+    <div class="sec-h"><span class="n">01</span><h2>The Shell</h2><span class="r"></span></div>
+    <p class="lead">Everything lives inside a persistent frame so context never disappears.</p>
+    <div class="grid2">
+      <div class="mini"><h4>Estate Map (home)</h4><p>A stylized world map of the course with three glowing districts and a clickable pin for every facility, plus a realm roster and a live estate-wide activity feed.</p></div>
+      <div class="mini"><h4>HUD (top bar)</h4><p>Always-on season dial, on-site weather, and three resource counters — water reserve, crew on-site, revenue today — like a sim's status bar.</p></div>
+      <div class="mini"><h4>Realm Switcher</h4><p>Estate · Conservation · Management · Golf. Each realm carries its own accent identity that themes every tool inside it.</p></div>
+      <div class="mini"><h4>Facility Boards</h4><p>Each realm opens to a banner + a grid of facility tiles showing live stats; click a tile to enter the full tool. Your place persists across reloads.</p></div>
+    </div>
+  </section>
+
+  <!-- CONSERVATION -->
+  <section style="--accent:var(--con)">
+    <div class="realm-band" style="--accent:var(--con)">
+      <div class="rb-ico"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 19c0-8 6-14 14-14 0 8-6 14-14 14z"/><path d="M5 19C9 14 13 11 17 9"/></svg></div>
+      <div><div class="rb-name">Conservation</div><div class="rb-sub">The living land · 11 facilities</div></div>
+      <div class="rb-tag">8 deep tools</div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C1</span><span class="t-name">Sensor Mesh</span><span class="t-tag">Flagship</span></div>
+      <p>A live network of 14 LoRa soil-moisture nodes plotted spatially, wired to a gateway, with a per-node <em class="term">depth profile</em> at 0–4″ / 4–8″ / 8–12″ and a dual-trace 24h telemetry plot.</p>
+      <div class="angle"><b>The angle</b>Native grasses root deep, so the 8–12″ reading — not the surface — drives chemical-free irrigation. You water to the plant's real need, not a schedule.</div>
+      <div class="links"><span>Drone Routes (stress cross-check)</span><span>Water Systems</span><span>Mowing</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C2</span><span class="t-name">Water Systems</span><span class="t-tag">Flagship</span></div>
+      <p>Rainwater cistern, pond reservoir, and well buffer as live tank gauges, a source-mix breakdown, and ET-adjusted usage by zone.</p>
+      <div class="angle"><b>The angle</b>0 gallons municipal draw, ~41% below the regional course average. Native species need ~40% less water; held zones (seed-set, buffer rest) show as "HOLD".</div>
+      <div class="links"><span>Sensor Mesh (ET budget)</span><span>Weather (ET driver)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C3</span><span class="t-name">Drone Routes</span><span class="t-tag">Flagship</span></div>
+      <p>A real mission planner: serpentine flight paths with waypoints over the course, four saved routes, NDVI vigor/stress patches, an NDVI this-vs-last comparison, and stress detections.</p>
+      <div class="angle"><b>The angle</b>Flights are phenology-timed (the sod-farm route flies at seed-set), and aerial stress patches cross-check against ground sensors — Z2 drought confirmed by node S-05.</div>
+      <div class="links"><span>Sensor Mesh (ground truth)</span><span>Sod Farm (timing)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C4</span><span class="t-name">Sod Farm</span><span class="t-tag">Phenology</span></div>
+      <p>Native-seed harvest tracked by phenology: nine plots moving through Dormant → Green-up → Vegetative → Boot → Heading → Seed-set → Ripe → Harvested, with a seasonal-window wheel.</p>
+      <div class="angle"><b>The angle</b>The course grows its own seed. Plots in seed-set are held for harvest, feeding the inventory and the conservation reporting.</div>
+      <div class="links"><span>Seed &amp; Stock (lots)</span><span>Mowing (holds)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C5</span><span class="t-name">Wetland</span><span class="t-tag">Flagship</span></div>
+      <p>A hydrologic cross-section (open water → emergent marsh → wet meadow → upland buffer) with live water level, plus a runoff-filtration treatment train and plant-community diversity by zone.</p>
+      <div class="angle"><b>The angle</b>The wetland does measurable work — −71% nitrate, −75% turbidity inflow-to-outflow — and anchors the Audubon sanctuary status. A 30-ft cart buffer is GPS-enforced.</div>
+      <div class="links"><span>Cart GPS (geofence)</span><span>Research Hub (surveys)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C6</span><span class="t-name">Composting</span><span class="t-tag">Closed loop</span></div>
+      <p>Six windrows on maturation tracks with live core-temperature telemetry, a thermometer marking the 130–160°F thermophilic band, C:N ratios, and a turn schedule.</p>
+      <div class="angle"><b>The angle</b>Closes the loop: clippings + sedge + apiary wax become the <em class="term">only</em> soil amendment the course uses. Zero synthetic fertilizer enters the system.</div>
+      <div class="links"><span>Finance (cost avoided)</span><span>Sod Farm (topdress)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C7</span><span class="t-name">Apiary</span><span class="t-tag">Pollinators</span></div>
+      <p>Twelve hives with scale + brood-temperature telemetry, activity readouts, and inspection logging.</p>
+      <div class="angle"><b>The angle</b>Native pollinators are why the wildflower roughs set seed. Hive data feeds the university study; honey + wax return to the pro shop and compost.</div>
+      <div class="links"><span>Research Hub</span><span>Pro Shop (honey)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C8</span><span class="t-name">Research Hub</span><span class="t-tag">Flagship</span></div>
+      <p>University data intake: a 4-stage pipeline (Submitted → Schema review → Validated → Merged), incoming datasets with preview charts, a schema-validation checklist, and a partner roster.</p>
+      <div class="angle"><b>The angle</b>The most distinctive piece — outside grad students push field data straight into the course record. Validated sets export to NRCS / CRP / Audubon with no re-keying.</div>
+      <div class="links"><span>Cameras (sightings)</span><span>Finance (grant reporting)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C9</span><span class="t-name">Mowing</span><span class="t-tag">Phenology</span></div>
+      <p>A phenology-gated weekly schedule across seven turf areas, height-of-cut profiles per species, and a blade-height visual against target.</p>
+      <div class="angle"><b>The angle</b>You physically can't schedule a cut that would destroy a seed-set window — held areas disable the button and explain why. Mowing follows the plants, not the calendar.</div>
+      <div class="links"><span>Weather (GDD windows)</span><span>Sod Farm</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C10</span><span class="t-name">Wildlife Cameras</span><span class="t-tag">Survey</span></div>
+      <p>A six-camera grid with motion-triggered feeds and a wildlife log that auto-tags species with confidence scores.</p>
+      <div class="angle"><b>The angle</b>The cameras double as a wildlife-survey instrument — survey-tagged sightings (heron, bobcat, wood duck) feed the Research Hub and the Audubon record automatically.</div>
+      <div class="links"><span>Research Hub</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">C11</span><span class="t-name">Weather Station</span><span class="t-tag">Engine</span></div>
+      <p>The on-site mast: current conditions, a Growing Degree Day season curve with phenology thresholds marked, a 7-day forecast, and a panel mapping GDD/ET to downstream decisions.</p>
+      <div class="angle"><b>The angle</b>This is the phenology engine. GDD and ET set mowing holds, irrigation budgets, harvest timing, and dormancy alerts across the other tools.</div>
+      <div class="links"><span>Mowing</span><span>Water Systems</span><span>Sod Farm</span></div>
+    </div>
+  </section>
+
+  <!-- MANAGEMENT -->
+  <section style="--accent:var(--man)">
+    <div class="realm-band" style="--accent:var(--man)">
+      <div class="rb-ico"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div>
+      <div><div class="rb-name">Management</div><div class="rb-sub">The operation · 6 facilities</div></div>
+      <div class="rb-tag">Workflow complete</div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M1</span><span class="t-name">Finance</span><span class="t-tag">Flagship</span></div>
+      <p>A 12-month P&amp;L with conservation grant lumps stacked into revenue, a funding pipeline across five programs, a revenue mix, and a "costs we don't pay" panel.</p>
+      <div class="angle"><b>The angle</b>Conservation is a real revenue line (14% — NRCS, CRP, pollinator grants, Audubon). And the chemical-free model avoids ~$72k/yr — economics, not just ethics.</div>
+      <div class="links"><span>Suppliers</span><span>Research Hub</span><span>Composting</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M2</span><span class="t-name">Events</span><span class="t-tag">Cross-wired</span></div>
+      <p>A June calendar of leagues, outings, tournaments, clinics, and conservation days, each with a "what this event touches" ripple panel.</p>
+      <div class="angle"><b>The angle</b>The most interconnected tool. A corporate outing blocks the tee sheet, staffs the crew, and books revenue; a conservation day instead feeds steward sign-ups and grant reporting.</div>
+      <div class="links"><span>Tee Sheet</span><span>Crew</span><span>Finance</span><span>Members</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M3</span><span class="t-name">Suppliers</span><span class="t-tag">Compliance</span></div>
+      <p>A purchase-order pipeline, vendor directory with certification badges, and a per-vendor compliance gate.</p>
+      <div class="angle"><b>The angle</b>The chemical-free standard is enforced at purchase — seed &amp; amendment vendors must carry Organic + Pesticide-free certs; fuel/equipment are exempt. On-site sourcing shows 0-day lead time.</div>
+      <div class="links"><span>Seed &amp; Stock</span><span>Composting (0-day)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M4</span><span class="t-name">Seed &amp; Stock (Inventory)</span><span class="t-tag">Core</span></div>
+      <p>A native-seed library (own-collected vs. purchased, Pure-Live-Seed %, germination, viability, storage) alongside general organic-amendment stock with reorder thresholds.</p>
+      <div class="angle"><b>The angle</b>72% of seed is course-collected — a closed-loop inventory. NRCS-ready export built in.</div>
+      <div class="links"><span>Sod Farm</span><span>Suppliers</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M5</span><span class="t-name">Crew</span><span class="t-tag">Core</span></div>
+      <p>Staff roster, a color-coded weekly shift grid, certifications (Part 107, native seed collection, pesticide-free), and per-person detail.</p>
+      <div class="links"><span>Schedules</span><span>Events</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">M6</span><span class="t-name">Schedules</span><span class="t-tag">Core</span></div>
+      <p>Shift planning across the crew, driven by the same roster — event holds and conservation days flow in automatically.</p>
+      <div class="links"><span>Crew</span><span>Events</span></div>
+    </div>
+  </section>
+
+  <!-- GOLF -->
+  <section style="--accent:var(--gol)">
+    <div class="realm-band" style="--accent:var(--gol)">
+      <div class="rb-ico"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 21V4M6 5h11l-2 3 2 3H6"/></svg></div>
+      <div><div class="rb-name">Golf</div><div class="rb-sub">The play · 6 facilities</div></div>
+      <div class="rb-tag">4 deep tools</div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">G1</span><span class="t-name">Tee Sheet</span><span class="t-tag">Core</span></div>
+      <p>A 10-minute-interval booking grid with live add/clear, walk-vs-cart, member lookup, and maintenance blocks (e.g. overseed plot 7).</p>
+      <div class="angle"><b>The angle</b>Maintenance and event holds appear right on the sheet, so front-of-house booking and back-of-house land work never collide.</div>
+      <div class="links"><span>Events (holds)</span><span>Members</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">G2</span><span class="t-name">Cart GPS</span><span class="t-tag">Flagship</span></div>
+      <p>Live fleet tracking on a course map — position, battery, status — with a wetland geofence buffer.</p>
+      <div class="angle"><b>The angle</b>The geofence keeps carts off saturated soil; an incursion (Cart 4) auto-flags to the conservation log, linking play to land protection.</div>
+      <div class="links"><span>Wetland (buffer)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">G3</span><span class="t-name">Pro Shop</span><span class="t-tag">Curated</span></div>
+      <p>A small curated retail catalog with sourcing tags, cost-vs-margin breakdowns, sales velocity, and a curation-story panel.</p>
+      <div class="angle"><b>The angle</b>79% local or conservation-sourced. Real line items: apiary honey, sod-farm wildflower seed, goods made within 12 miles — the shop tells the course's story.</div>
+      <div class="links"><span>Apiary (honey)</span><span>Sod Farm (seed)</span></div>
+    </div>
+
+    <div class="tool"><div class="t-head"><span class="t-num">G4</span><span class="t-name">Members</span><span class="t-tag">Flagship</span></div>
+      <p>Tiered membership (Steward / Annual / Twilight), a directory with steward-hours, a stewardship program with hours-by-activity and a perk ladder, and upcoming conservation days.</p>
+      <div class="angle"><b>The angle</b>Steward members volunteer on conservation days for perks — ~1,240 hours/yr (≈31 work-days) donated. Membership and land stewardship are the same system.</div>
+      <div class="links"><span>Events (sign-ups)</span><span>Research Hub</span><span>Seed crew</span></div>
+    </div>
+
+    <div class="tool" style="opacity:.72"><div class="t-head"><span class="t-num">G5–6</span><span class="t-name">Scorecards &amp; Lessons</span><span class="t-tag">By design: not standalone</span></div>
+      <p>Intentionally left as the agenda/booking pattern rather than forced standalone tools. Scorecards is a GHIN-handled commodity (the only non-generic angle — native-rough difficulty rating — is a once-a-year USGA function), and Lessons is structurally identical to the Tee Sheet's booking flow. Both are noted here so the omission reads as a decision, not a gap.</p>
+    </div>
+  </section>
+
+  <!-- CROSS-SYSTEM -->
+  <section>
+    <div class="sec-h"><span class="n">02</span><h2>How It Connects</h2><span class="r"></span></div>
+    <p class="lead">The thesis is that nothing on a native course is isolated. A few of the wires worth knowing:</p>
+    <ul class="feat" style="--accent:var(--con)">
+      <li><strong class="h">Drone stress ↔ Soil sensors</strong> — aerial NDVI patches are confirmed (or dismissed) by ground-truth moisture nodes.</li>
+      <li><strong class="h">Events → Tee Sheet + Crew + Finance</strong> — one booking cascades into course holds, staffing, and the books.</li>
+      <li><strong class="h">Members → Conservation days → Research Hub</strong> — steward volunteer hours become survey data and grant-reportable labor.</li>
+      <li><strong class="h">Composting → Finance</strong> — the closed loop shows up as fertilizer cost avoided, not just an ecological note.</li>
+      <li><strong class="h">Weather → Mowing / Water / Sod Farm</strong> — GDD and ET from one mast set seasonal decisions everywhere.</li>
+      <li><strong class="h">Suppliers → everything with soil contact</strong> — the no-synthetics rule is enforced at the purchase order.</li>
+    </ul>
+  </section>
+
+  <!-- TECH -->
+  <section>
+    <div class="sec-h"><span class="n">03</span><h2>Build Notes</h2><span class="r"></span></div>
+    <div class="tech">
+      <h4>Stack</h4>
+      <p>A single-page app: <code>React 18</code> + in-browser <code>Babel</code>, no build step. Plain <code>.jsx</code> files loaded as <code>&lt;script type="text/babel"&gt;</code> and composed on <code>window</code>. One stylesheet (<code>sim.css</code>) carries all design tokens. No framework, no bundler, no dependencies beyond React — in keeping with the "reliability over cleverness, no unnecessary dependencies" brief.</p>
+
+      <h4>Theming</h4>
+      <p>The whole look is driven by CSS custom properties. The light pastel-jade palette and the per-realm accent (<code>--realm</code>, swapped on the app frame as you change worlds) mean a tool written against the tokens themes itself correctly in any realm. Switching back to a dark theme is a one-block edit in <code>:root</code>.</p>
+
+      <h4>Adding a facility tool</h4>
+      <p>Four touch-points, by design:</p>
+      <div class="filetree"><b>1.</b> write <b>tool-yourtool.jsx</b> → window.YourTool   <span style="color:var(--ink-4)">// use unique const names!</span>
+<b>2.</b> sim-shared.jsx  → set the facility's <b>tool:</b> field
+<b>3.</b> sim-app.jsx     → register in <b>CUSTOM</b> + the globals list
+<b>4.</b> Superintendent.html → add the <b>&lt;script&gt;</b> tag</div>
+      <p style="margin-top:12px"><strong class="h">One gotcha:</strong> every Babel script shares one global scope, so top-level <code>const</code> names must be unique across files (a <code>STAGES</code> / <code>MEMBERS</code> collision will silently pull the wrong data). Prefix tool constants.</p>
+
+      <h4>File map</h4>
+      <div class="filetree"><b>Superintendent.html</b>   entry — loads everything
+<b>sim.css</b>              design tokens + components
+<b>sim-shared.jsx</b>       icons, charts, FACILITIES model
+<b>sim-chrome.jsx</b>       HUD, season dial, switcher, cards
+<b>sim-hub.jsx</b>          Estate world map
+<b>sim-realm.jsx</b>        realm boards + facility briefs
+<b>sim-app.jsx</b>          routing, theming, persistence
+<b>tool-*.jsx</b>           15 purpose-built facility tools
+<b>teetime / inventory / employees / harvest.jsx</b>   core tools</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>SUPERINTENDENT · PINE HOLLOW ESTATE</span>
+    <span>PRINT TO PDF · ⌘P</span>
+  </div>
+
+</div>
+</body>
+</html>

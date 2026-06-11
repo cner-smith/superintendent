@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Superintendent v0.1 — design comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body, h1, h2, h3, h4, p, ul, ol, figure { margin: 0; padding: 0; }
+  ul, ol { list-style: none; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #1a1a1a;
+    background: #fafaf7;
+    line-height: 1.5;
+    padding: 32px 24px 96px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .page-header { border-bottom: 1px solid #ccc; padding-bottom: 24px; margin-bottom: 32px; }
+  .page-header h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .page-header p { font-size: 16px; color: #555; max-width: 80ch; }
+  .legend { display: flex; gap: 24px; margin-top: 16px; font-size: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }
+  .legend-swatch.a { background: #1E5A8C; }
+  .legend-swatch.v { background: #2563EB; }
+
+  section { margin-top: 48px; }
+  section > h2 {
+    font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em;
+    color: #777; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px dashed #ddd;
+  }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .pair { grid-template-columns: 1fr; } }
+  .panel { border-radius: 8px; overflow: hidden; border: 1px solid #e2e2e2; background: white; }
+  .panel-header {
+    padding: 12px 16px; background: #f4f4f1; border-bottom: 1px solid #e2e2e2;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .panel-header .name { font-weight: 600; font-size: 14px; letter-spacing: 0.02em; }
+  .panel-header .tag {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  /* Interface-artisan tokens */
+  .ia {
+    --ink: #1B1F1A; --paper: #F5F1E8; --paper-2: #EBE5D4;
+    --soil: #6B4E2E; --lichen: #5B6B3F; --survey: #1E5A8C; --iron: #A8392C;
+    --veg-1: #3B2C4D; --veg-2: #9B7AA3; --veg-3: #D9C9B0; --veg-4: #7A9B5C; --veg-5: #2D4A1E;
+    --font-display: 'Source Serif 4', Georgia, serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  }
+
+  /* voltagent tokens */
+  .vg {
+    --ink: #1C1A17; --paper: #F5F0E8; --prairie: #8B6F47; --loam: #4A3728;
+    --accent: #2563EB; --warn: #D97706; --error: #B91C1C;
+    --surface-1: #EDE8DC; --surface-2: #E2DBCA; --border: #C9BEA8;
+    --text-secondary: #6B5744; --text-muted: #9C8B78;
+    --veg-1: #7B3F00; --veg-2: #C68642; --veg-3: #F5F0E8; --veg-4: #4A90D9; --veg-5: #1B3A6B;
+    --font-display: 'IBM Plex Mono', 'Courier New', monospace;
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  }
+
+  .brand-statement {
+    padding: 32px 24px; min-height: 200px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .brand-statement .tagline {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.18em;
+    color: rgba(0,0,0,.5); margin-bottom: 16px;
+  }
+  .brand-statement .quote { font-size: 24px; line-height: 1.35; max-width: 30ch; font-weight: 500; }
+  .ia .brand-statement .quote { font-family: var(--font-display); }
+  .vg .brand-statement .quote { font-family: var(--font-body); }
+  .ia .brand-statement .tagline { color: var(--soil); }
+  .vg .brand-statement .tagline { color: var(--text-secondary); }
+
+  .wordmark-stage {
+    padding: 56px 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px;
+  }
+  .wordmark-stage .compact {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; color: rgba(0,0,0,.45);
+  }
+  .ia .wm-main { font-family: var(--font-display); font-weight: 600; font-size: 44px; letter-spacing: -0.005em; line-height: 1; }
+  .ia .wm-rule { width: 100%; height: 1px; background: var(--soil); margin-top: 8px; }
+  .ia .wm-parcel { font-family: var(--font-mono); font-size: 11px; color: var(--soil); margin-top: 8px; letter-spacing: 0.04em; }
+  .ia .wm-monogram { font-family: var(--font-display); font-weight: 700; font-size: 64px; line-height: 1; }
+  .vg .wm-main { font-family: var(--font-display); font-weight: 500; font-size: 36px; letter-spacing: 0.08em; line-height: 1; }
+  .vg .wm-rule { width: 100%; height: 1px; background: var(--ink); margin-top: 14px; }
+  .vg .wm-parcel { font-family: var(--font-display); font-size: 11px; color: var(--text-secondary); margin-top: 8px; letter-spacing: 0.12em; }
+  .vg .wm-monogram { font-family: var(--font-display); font-weight: 500; font-size: 56px; line-height: 1; letter-spacing: 0.08em; }
+
+  .palette {
+    padding: 24px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px;
+  }
+  .swatch { border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,.06); display: flex; flex-direction: column; }
+  .swatch .chip { height: 56px; }
+  .swatch .meta { padding: 8px 10px; background: white; font-size: 11px; line-height: 1.35; border-top: 1px solid rgba(0,0,0,.06); }
+  .swatch .meta .name { font-weight: 600; margin-bottom: 2px; color: #222; }
+  .ia .swatch .meta .name { font-family: 'Inter', sans-serif; }
+  .vg .swatch .meta .name { font-family: var(--font-display); letter-spacing: 0.02em; }
+  .swatch .meta .hex { font-family: 'JetBrains Mono', ui-monospace, monospace; color: #666; font-size: 10px; }
+  .swatch .meta .role { color: #888; font-size: 10px; margin-top: 2px; }
+
+  .ramp-stage { padding: 32px 24px; }
+  .ramp-label {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;
+    font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(0,0,0,.55);
+  }
+  .ramp-label .index-name { font-weight: 600; color: rgba(0,0,0,.7); }
+  .ramp { height: 32px; border-radius: 4px; border: 1px solid rgba(0,0,0,.06); }
+  .ia .ramp { background: linear-gradient(to right, var(--veg-1) 0%, var(--veg-2) 25%, var(--veg-3) 50%, var(--veg-4) 75%, var(--veg-5) 100%); }
+  .vg .ramp { background: linear-gradient(to right, var(--veg-1) 0%, var(--veg-2) 25%, var(--veg-3) 50%, var(--veg-4) 75%, var(--veg-5) 100%); }
+  .ramp-ticks {
+    display: flex; justify-content: space-between; margin-top: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(0,0,0,.55);
+  }
+  .ramp-caption { margin-top: 16px; font-size: 13px; line-height: 1.5; color: rgba(0,0,0,.65); max-width: 50ch; }
+  .ia .ramp-ticks, .ia .ramp-caption { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .vg .ramp-ticks { font-family: var(--font-display); }
+  .vg .ramp-caption { font-family: var(--font-body); }
+
+  .type-stage { padding: 24px; }
+  .type-h1 { font-size: 36px; line-height: 1.15; margin-bottom: 12px; }
+  .type-h2 { font-size: 22px; line-height: 1.25; margin: 24px 0 8px; }
+  .type-body { font-size: 15px; line-height: 1.55; margin-bottom: 16px; }
+  .type-data { padding: 16px; border-radius: 6px; font-size: 13px; line-height: 1.6; }
+  .ia .type-h1, .ia .type-h2 { font-family: var(--font-display); font-weight: 600; }
+  .ia .type-body { font-family: var(--font-body); }
+  .ia .type-data { font-family: var(--font-mono); background: var(--paper-2); }
+  .vg .type-h1 { font-family: var(--font-display); font-weight: 500; letter-spacing: 0.01em; }
+  .vg .type-h2 { font-family: var(--font-display); font-weight: 500; letter-spacing: 0.02em; }
+  .vg .type-body { font-family: var(--font-body); }
+  .vg .type-data { font-family: var(--font-display); background: var(--surface-1); }
+
+  .components-stage { padding: 24px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+
+  .btn { display: inline-flex; align-items: center; padding: 10px 16px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+  .ia .btn-primary { background: var(--survey); color: white; }
+  .ia .btn-secondary { background: transparent; color: var(--ink); border-color: var(--soil); }
+  .ia .btn-destructive { background: var(--iron); color: white; }
+  .vg .btn-primary { background: var(--accent); color: white; }
+  .vg .btn-secondary { background: transparent; color: var(--ink); border-color: var(--border); }
+  .vg .btn-destructive { background: var(--error); color: white; }
+
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; font-size: 12px; font-weight: 500; border-radius: 999px; gap: 6px; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 999px; display: inline-block; }
+  .ia .badge-ready { background: rgba(91,107,63,.15); color: #3F4A2A; }
+  .ia .badge-ready .dot { background: var(--lichen); }
+  .ia .badge-processing { background: rgba(30,90,140,.12); color: var(--survey); }
+  .ia .badge-processing .dot { background: var(--survey); animation: pulse 1.5s infinite; }
+  .ia .badge-failed { background: rgba(168,57,44,.12); color: var(--iron); }
+  .ia .badge-failed .dot { background: var(--iron); }
+  .vg .badge-ready { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+  .vg .badge-ready .dot { background: var(--ink); }
+  .vg .badge-processing { background: rgba(217,119,6,.15); color: #92400e; }
+  .vg .badge-processing .dot { background: var(--warn); animation: pulse 1.5s infinite; }
+  .vg .badge-failed { background: rgba(185,28,28,.12); color: var(--error); }
+  .vg .badge-failed .dot { background: var(--error); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .flight-card {
+    display: flex; gap: 16px; padding: 16px; border-radius: 8px;
+    border: 1px solid rgba(0,0,0,.08); margin-bottom: 12px; background: white;
+  }
+  .ia .flight-card { background: var(--paper-2); border-color: rgba(107,78,46,.2); }
+  .vg .flight-card { background: var(--surface-1); border-color: var(--border); }
+  .flight-thumb { width: 72px; height: 72px; border-radius: 6px; flex-shrink: 0; }
+  .ia .flight-thumb { background: linear-gradient(135deg, var(--lichen), var(--soil)); }
+  .vg .flight-thumb { background: linear-gradient(135deg, var(--prairie), var(--loam)); }
+  .flight-meta { flex: 1; min-width: 0; }
+  .flight-date { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .ia .flight-date { font-family: var(--font-display); }
+  .vg .flight-date { font-family: var(--font-display); letter-spacing: 0.02em; }
+  .flight-row { font-size: 13px; color: rgba(0,0,0,.6); margin-bottom: 4px; }
+  .flight-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+
+  .screen-frame { padding: 0; background: white; border-top: 1px solid rgba(0,0,0,.08); }
+  .screen-mock {
+    padding: 64px 24px; min-height: 360px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ia .screen-mock {
+    background: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(27,31,26,.04) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(90deg, rgba(27,31,26,.04) 0 1px, transparent 1px 8px);
+  }
+  .vg .screen-mock { background: var(--paper); }
+  .auth-card { width: 100%; max-width: 360px; }
+  .auth-tagline { font-size: 13px; margin: 32px 0 8px; color: rgba(0,0,0,.55); }
+  .auth-body { font-size: 14px; line-height: 1.55; margin-bottom: 16px; color: rgba(0,0,0,.7); }
+  .auth-input {
+    width: 100%; padding: 12px 14px; border-radius: 6px; border: 1px solid rgba(0,0,0,.18);
+    font-size: 15px; background: white; margin-bottom: 12px; box-sizing: border-box;
+  }
+  .auth-submit {
+    width: 100%; padding: 12px 14px; border-radius: 6px; border: 0;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+  }
+  .ia .auth-input { border-color: var(--soil); font-family: var(--font-body); }
+  .ia .auth-submit { background: var(--survey); color: white; font-family: var(--font-body); }
+  .ia .auth-body { font-family: var(--font-body); }
+  .vg .auth-input { border-color: var(--border); font-family: var(--font-body); }
+  .vg .auth-submit { background: var(--accent); color: white; font-family: var(--font-body); }
+  .vg .auth-body { font-family: var(--font-body); }
+
+  .map-shell { padding: 0; height: 460px; display: flex; flex-direction: column; background: white; overflow: hidden; }
+  .map-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,.1); background: white;
+  }
+  .ia .map-topbar { background: var(--paper-2); border-color: rgba(27,31,26,.1); }
+  .vg .map-topbar { background: var(--paper); border-color: var(--border); }
+  .map-topbar .left { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .map-topbar .parcel { font-size: 12px; color: rgba(0,0,0,.55); }
+  .ia .map-topbar .brand { font-family: var(--font-display); font-weight: 600; }
+  .vg .map-topbar .brand { font-family: var(--font-display); font-weight: 500; letter-spacing: 0.06em; }
+  .map-topbar .right .avatar {
+    width: 28px; height: 28px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
+  }
+  .ia .map-topbar .right .avatar { background: var(--lichen); color: white; font-family: var(--font-body); }
+  .vg .map-topbar .right .avatar { background: var(--prairie); color: white; font-family: var(--font-display); letter-spacing: 0.04em; }
+
+  .map-canvas {
+    flex: 1; position: relative;
+    background:
+      radial-gradient(circle at 30% 35%, rgba(74,144,226,.05), transparent 40%),
+      radial-gradient(circle at 70% 65%, rgba(123,144,89,.08), transparent 50%),
+      linear-gradient(135deg, #cdd4c7 0%, #bdc5b6 50%, #aab0a1 100%);
+  }
+  .zone { position: absolute; border-radius: 4px; border: 2px solid; }
+  .ia .zone-a { top: 22%; left: 18%; width: 30%; height: 28%; border-color: var(--soil); background: rgba(107,78,46,.18); }
+  .ia .zone-b { top: 55%; left: 30%; width: 36%; height: 24%; border-color: var(--lichen); background: rgba(91,107,63,.18); }
+  .ia .zone-c { top: 28%; left: 55%; width: 22%; height: 36%; border-color: var(--survey); background: rgba(30,90,140,.16); outline: 1px solid var(--survey); outline-offset: 1px; }
+  .vg .zone-a { top: 22%; left: 18%; width: 30%; height: 28%; border-color: var(--prairie); background: rgba(139,111,71,.18); }
+  .vg .zone-b { top: 55%; left: 30%; width: 36%; height: 24%; border-color: var(--loam); background: rgba(74,55,40,.16); }
+  .vg .zone-c { top: 28%; left: 55%; width: 22%; height: 36%; border-color: var(--accent); background: rgba(37,99,235,.14); outline: 1px solid var(--accent); outline-offset: 1px; }
+
+  .index-switcher {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; background: rgba(255,255,255,.96); border-radius: 6px; padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15); gap: 2px;
+  }
+  .seg { padding: 6px 12px; font-size: 12px; font-weight: 500; border-radius: 4px; cursor: pointer; }
+  .seg.active { color: white; }
+  .ia .seg { font-family: var(--font-body); color: var(--ink); }
+  .ia .seg.active { background: var(--survey); }
+  .vg .seg { font-family: var(--font-display); letter-spacing: 0.04em; color: var(--ink); }
+  .vg .seg.active { background: var(--accent); }
+
+  .legend-strip {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(255,255,255,.96); padding: 8px 10px; border-radius: 6px;
+    font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,.15); min-width: 200px;
+  }
+  .legend-strip .name { font-weight: 600; margin-bottom: 4px; font-size: 11px; }
+  .ia .legend-strip .name { font-family: var(--font-display); }
+  .vg .legend-strip .name { font-family: var(--font-display); letter-spacing: 0.04em; }
+  .legend-bar { height: 10px; border-radius: 2px; }
+  .ia .legend-bar { background: linear-gradient(to right, var(--veg-1), var(--veg-2), var(--veg-3), var(--veg-4), var(--veg-5)); }
+  .vg .legend-bar { background: linear-gradient(to right, var(--veg-1), var(--veg-2), var(--veg-3), var(--veg-4), var(--veg-5)); }
+  .legend-ticks { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: rgba(0,0,0,.55); }
+  .ia .legend-ticks { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .vg .legend-ticks { font-family: var(--font-display); }
+
+  .upload-fab {
+    position: absolute; bottom: 12px; right: 12px;
+    padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 0; color: white; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .ia .upload-fab { background: var(--survey); font-family: var(--font-body); }
+  .vg .upload-fab { background: var(--accent); font-family: var(--font-body); }
+
+  .footnote { margin-top: 64px; padding-top: 24px; border-top: 1px solid #ddd; font-size: 13px; color: #777; line-height: 1.55; }
+  .footnote ul { padding-left: 18px; list-style: disc; }
+  .footnote li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Superintendent v0.1 — Design Comparison</h1>
+  <p>
+    Side-by-side rendering of the two designer-agent responses to
+    <code>docs/superpowers/specs/2026-05-28-designer-brief.md</code>.
+    Real Google Fonts, exact hex codes from each design's token table.
+    Open this file in a browser to see the actual visual difference between
+    the two directions.
+  </p>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch a"></span> Interface-artisan — field journal</span>
+    <span class="legend-item"><span class="legend-swatch v"></span> voltagent ui-designer — precision instrument</span>
+  </div>
+</header>
+
+<section>
+  <h2>Brand statement</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">field journal</span></div>
+      <div class="ia brand-statement">
+        <div class="tagline">A field journal that happens to be software</div>
+        <div class="quote">A tool the user inherits, not a tool that's chasing them.</div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">precision instrument</span></div>
+      <div class="vg brand-statement">
+        <div class="tagline">A precision instrument for measured data</div>
+        <div class="quote">Closer to a GPS survey readout than a SaaS logotype.</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Wordmark</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">Source Serif 4</span></div>
+      <div class="ia wordmark-stage">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div class="wm-main">Superintendent</div>
+          <div class="wm-rule"></div>
+          <div class="wm-parcel">OKC HOME / Plot 1</div>
+        </div>
+        <div class="compact">Compact mark</div>
+        <div class="wm-monogram">St</div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">IBM Plex Mono</span></div>
+      <div class="vg wordmark-stage">
+        <div style="display:flex; flex-direction:column; align-items:center; width: 100%; max-width: 340px;">
+          <div class="wm-main">SUPERINTENDENT</div>
+          <div class="wm-rule"></div>
+          <div class="wm-parcel">GARDEN — HOME</div>
+        </div>
+        <div class="compact">Compact mark</div>
+        <div class="wm-monogram">SUPT</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Palette</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">7 tokens + index ramp</span></div>
+      <div class="ia palette">
+        <div class="swatch"><div class="chip" style="background:#1B1F1A"></div><div class="meta"><div class="name">ink</div><div class="hex">#1B1F1A</div><div class="role">body, strokes</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F5F1E8"></div><div class="meta"><div class="name">paper</div><div class="hex">#F5F1E8</div><div class="role">page bg</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#EBE5D4"></div><div class="meta"><div class="name">paper-2</div><div class="hex">#EBE5D4</div><div class="role">cards</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#6B4E2E"></div><div class="meta"><div class="name">soil</div><div class="hex">#6B4E2E</div><div class="role">earth 1</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#5B6B3F"></div><div class="meta"><div class="name">lichen</div><div class="hex">#5B6B3F</div><div class="role">earth 2 / native</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#1E5A8C"></div><div class="meta"><div class="name">survey</div><div class="hex">#1E5A8C</div><div class="role">accent (USGS blue)</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#A8392C"></div><div class="meta"><div class="name">iron</div><div class="hex">#A8392C</div><div class="role">errors (oxidized)</div></div></div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">7 tokens + 4 surfaces</span></div>
+      <div class="vg palette">
+        <div class="swatch"><div class="chip" style="background:#1C1A17"></div><div class="meta"><div class="name">ink</div><div class="hex">#1C1A17</div><div class="role">body</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F5F0E8"></div><div class="meta"><div class="name">paper</div><div class="hex">#F5F0E8</div><div class="role">page bg</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#EDE8DC"></div><div class="meta"><div class="name">surface-1</div><div class="hex">#EDE8DC</div><div class="role">cards</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#8B6F47"></div><div class="meta"><div class="name">prairie</div><div class="hex">#8B6F47</div><div class="role">earth mid</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#4A3728"></div><div class="meta"><div class="name">loam</div><div class="hex">#4A3728</div><div class="role">earth dark</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#2563EB"></div><div class="meta"><div class="name">accent</div><div class="hex">#2563EB</div><div class="role">primary (Tailwind blue)</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#D97706"></div><div class="meta"><div class="name">warn</div><div class="hex">#D97706</div><div class="role">processing / amber</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#B91C1C"></div><div class="meta"><div class="name">error</div><div class="hex">#B91C1C</div><div class="role">errors (sienna)</div></div></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>VARI vegetation index ramp <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#aaa; font-size:11px;">(the most consequential difference)</span></h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">purple → tan → green</span></div>
+      <div class="ia ramp-stage">
+        <div class="ramp-label"><span class="index-name">VARI</span><span>Visible Atmospherically Resistant Index</span></div>
+        <div class="ramp"></div>
+        <div class="ramp-ticks"><span>−1.0</span><span>−0.5</span><span>0.0</span><span>+0.5</span><span>+1.0</span></div>
+        <div class="ramp-caption">
+          Green = healthy (convention preserved). Color-blind safe by luminance.
+          Tan midpoint reads as "neutral / bare soil." GIS-literate users read it on first glance.
+        </div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">brown → paper → blue</span></div>
+      <div class="vg ramp-stage">
+        <div class="ramp-label"><span class="index-name">VARI</span><span>Visible Atmospherically Resistant Index</span></div>
+        <div class="ramp"></div>
+        <div class="ramp-ticks"><span>−1.0</span><span>−0.5</span><span>0.0</span><span>+0.5</span><span>+1.0</span></div>
+        <div class="ramp-caption">
+          Blue = healthy (convention broken). Most color-blind safe of the two.
+          Requires legend education; voltagent proposed an opt-in "classic" red-yellow-green toggle.
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Type specimen</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">Source Serif 4 / Inter / JetBrains Mono</span></div>
+      <div class="ia type-stage">
+        <div class="type-h1">Native border</div>
+        <div class="type-h2">Flight detail — May 24, 2026</div>
+        <div class="type-body">The southern bed shows steady recovery after the late-May rain, with mean VARI improving from 0.28 to 0.42 across two flights. The lawn lags behind, suggesting compaction near the path edge.</div>
+        <div class="type-data">VARI mean: 0.42<br />GLI mean: 0.38<br />ExG mean: 0.51<br />Std dev: 0.08<br />Δ vs prev: +0.04</div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">IBM Plex Mono / Plex Sans</span></div>
+      <div class="vg type-stage">
+        <div class="type-h1">Native border</div>
+        <div class="type-h2">Flight detail — May 24, 2026</div>
+        <div class="type-body">The southern bed shows steady recovery after the late-May rain, with mean VARI improving from 0.28 to 0.42 across two flights. The lawn lags behind, suggesting compaction near the path edge.</div>
+        <div class="type-data">VARI mean: 0.42<br />GLI mean: 0.38<br />ExG mean: 0.51<br />Std dev: 0.08<br />Δ vs prev: +0.04</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Components — buttons, status badges, flight card</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">survey-blue + lichen + iron</span></div>
+      <div class="ia components-stage">
+        <div class="row">
+          <button class="btn btn-primary">Send me a link</button>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-destructive">Delete flight</button>
+        </div>
+        <div class="row">
+          <span class="badge badge-ready"><span class="dot"></span>Ready</span>
+          <span class="badge badge-processing"><span class="dot"></span>Processing</span>
+          <span class="badge badge-failed"><span class="dot"></span>Failed</span>
+        </div>
+        <div class="flight-card">
+          <div class="flight-thumb"></div>
+          <div class="flight-meta">
+            <div class="flight-header-row">
+              <div class="flight-date">May 24, 2026 · 2:14 PM</div>
+              <span class="badge badge-ready"><span class="dot"></span>Ready</span>
+            </div>
+            <div class="flight-row">DJI Flip · Clear, 78°F, light breeze</div>
+            <div class="flight-row">4 zones · mean VARI 0.31 (+0.04 vs prev)</div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">accent-blue + prairie + sienna</span></div>
+      <div class="vg components-stage">
+        <div class="row">
+          <button class="btn btn-primary">Send sign-in link →</button>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-destructive">Delete flight</button>
+        </div>
+        <div class="row">
+          <span class="badge badge-ready"><span class="dot"></span>ready ✓</span>
+          <span class="badge badge-processing"><span class="dot"></span>processing…</span>
+          <span class="badge badge-failed"><span class="dot"></span>failed ✗</span>
+        </div>
+        <div class="flight-card">
+          <div class="flight-thumb"></div>
+          <div class="flight-meta">
+            <div class="flight-header-row">
+              <div class="flight-date">Oct 14, 2024</div>
+              <span class="badge badge-ready"><span class="dot"></span>ready ✓</span>
+            </div>
+            <div class="flight-row">DJI Flip · Partly cloudy, calm</div>
+            <div class="flight-row">4 zones · mean VARI 0.31 (+0.04)</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Sample screen — S1 Auth</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">paper bg + hairline grid</span></div>
+      <div class="ia screen-frame">
+        <div class="screen-mock">
+          <div class="auth-card">
+            <div style="text-align:center;">
+              <div class="wm-main" style="font-size:32px;">Superintendent</div>
+              <div class="wm-rule"></div>
+            </div>
+            <div class="auth-tagline">A field record for the land you tend.</div>
+            <input class="auth-input" placeholder="your@email.com" />
+            <button class="auth-submit">Send me a link</button>
+            <div class="auth-body" style="margin-top:16px; text-align:center;">No password. We'll email you a one-time sign-in link.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">paper bg, no texture</span></div>
+      <div class="vg screen-frame">
+        <div class="screen-mock">
+          <div class="auth-card">
+            <div style="text-align:center;">
+              <div class="wm-main" style="font-size:26px;">SUPERINTENDENT</div>
+              <div class="wm-rule"></div>
+            </div>
+            <div class="auth-tagline" style="margin-top: 28px;">Sign in to your account.<br />We'll send a link to your email — no password needed.</div>
+            <input class="auth-input" placeholder="your@email.com" />
+            <button class="auth-submit">Send sign-in link →</button>
+            <div class="auth-body" style="margin-top:24px; text-align:center; color:rgba(0,0,0,.4);">For access, contact the system owner.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Sample screen — S3 Map shell with index switcher, zones, legend, FAB</h2>
+  <div class="pair">
+    <article class="panel">
+      <div class="panel-header"><span class="name">Interface-artisan</span><span class="tag">soil outlines + survey selection</span></div>
+      <div class="ia screen-frame">
+        <div class="map-shell">
+          <div class="map-topbar">
+            <div class="left">
+              <span class="brand">Superintendent</span>
+              <span class="parcel">/ OKC HOME ⌄</span>
+            </div>
+            <div class="right"><span class="avatar">CS</span></div>
+          </div>
+          <div class="map-canvas">
+            <div class="zone zone-a"></div>
+            <div class="zone zone-b"></div>
+            <div class="zone zone-c"></div>
+            <div class="index-switcher">
+              <span class="seg">Ortho</span>
+              <span class="seg active">VARI</span>
+              <span class="seg">GLI</span>
+              <span class="seg">ExG</span>
+            </div>
+            <div class="legend-strip">
+              <div class="name">VARI</div>
+              <div class="legend-bar"></div>
+              <div class="legend-ticks"><span>−1.0</span><span>0.0</span><span>+1.0</span></div>
+            </div>
+            <button class="upload-fab">⬆ Upload flight</button>
+          </div>
+        </div>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-header"><span class="name">voltagent ui-designer</span><span class="tag">prairie outlines + accent selection</span></div>
+      <div class="vg screen-frame">
+        <div class="map-shell">
+          <div class="map-topbar">
+            <div class="left">
+              <span class="brand">SUPT</span>
+              <span class="parcel">[ Garden — Home ▾ ]</span>
+            </div>
+            <div class="right"><span class="avatar">CS</span></div>
+          </div>
+          <div class="map-canvas">
+            <div class="zone zone-a"></div>
+            <div class="zone zone-b"></div>
+            <div class="zone zone-c"></div>
+            <div class="index-switcher">
+              <span class="seg">Ortho</span>
+              <span class="seg active">VARI</span>
+              <span class="seg">GLI</span>
+              <span class="seg">ExG</span>
+            </div>
+            <div class="legend-strip">
+              <div class="name">VARI</div>
+              <div class="legend-bar"></div>
+              <div class="legend-ticks"><span>−1.0</span><span>0.0</span><span>+1.0</span></div>
+            </div>
+            <button class="upload-fab">↑ Upload flight</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<footer class="footnote">
+  <p><strong>What this is.</strong> A faithful side-by-side render of the design tokens, fonts, and component patterns from each designer agent. The map canvas is a CSS gradient mockup, not a real MapLibre instance — close enough to feel the design direction.</p>
+  <p><strong>What's missing.</strong> Mobile breakpoints, all 8 screens (only S1 Auth and S3 Map shell rendered), full data tables (S5/S6), the upload wizard wait states (S7). If a direction is picked, the next pass can expand.</p>
+  <p><strong>Decision points to look at.</strong></p>
+  <ul>
+    <li>Serif vs mono wordmark — which one reads as "stewardship" to you?</li>
+    <li>USGS blue (#1E5A8C, muted) vs Tailwind blue (#2563EB, saturated)</li>
+    <li>Green-healthy VARI ramp (intuitive, convention-following) vs blue-healthy (most color-blind safe, unconventional)</li>
+    <li>Hairline-grid texture in empty states (interface-artisan) vs pure negative space (voltagent)</li>
+    <li>Three earth tones with one olive-green (interface-artisan's "soil + lichen") vs two browns (voltagent's "prairie + loam")</li>
+  </ul>
+</footer>
+
+</body>
+</html>

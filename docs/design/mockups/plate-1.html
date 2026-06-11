@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Superintendent — Plate 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Aclonica&family=Special+Elite&family=Homemade+Apple&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --paper:    #E8DCBA;
+    --paper-2:  #D9C99B;
+    --ink:      #221610;
+    --ink-2:    #4E3826;
+    --ink-3:    #806A4C;
+    --red:      #7C2A1C;
+    --gold:     #B58A33;
+    --olive:    #5C5E2C;
+    --blueprint:#0F2A47;
+    --blueprint-line: #E8DCBA;
+    --blueprint-gold: #EFC44B;
+    --font-display: 'Aclonica', Impact, sans-serif;
+    --font-body:    'Special Elite', 'Courier New', monospace;
+    --font-hand:    'Homemade Apple', cursive;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body, h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+  html, body { background: #C9B687; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 32px 16px 96px;
+    overflow-x: hidden;
+  }
+
+  .plate {
+    max-width: 1280px;
+    margin: 0 auto;
+    background: var(--paper);
+    position: relative;
+    box-shadow:
+      0 8px 24px rgba(34, 22, 16, .35),
+      0 1px 0 rgba(255, 255, 255, .25) inset;
+    background-image:
+      radial-gradient(circle at 88% 14%, rgba(124, 60, 28, .14) 0 24px, rgba(124, 60, 28, .04) 24px 36px, transparent 36px),
+      radial-gradient(circle at 6% 92%, rgba(124, 60, 28, .10) 0 18px, rgba(124, 60, 28, .03) 18px 28px, transparent 28px),
+      radial-gradient(ellipse 800px 400px at 25% 30%, rgba(181, 138, 51, .18), transparent 70%),
+      radial-gradient(ellipse 700px 350px at 80% 75%, rgba(124, 42, 28, .12), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(34, 22, 16, .035) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, rgba(34, 22, 16, .035) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(37deg, rgba(34, 22, 16, .02) 0 1px, transparent 1px 4px);
+    padding: 64px 56px 96px;
+  }
+  .plate::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 12% 78%, rgba(34, 22, 16, .08) 0 2px, transparent 4px),
+      radial-gradient(circle at 67% 23%, rgba(34, 22, 16, .05) 0 1px, transparent 3px),
+      radial-gradient(circle at 41% 88%, rgba(34, 22, 16, .04) 0 1px, transparent 2px),
+      radial-gradient(circle at 84% 56%, rgba(34, 22, 16, .03) 0 1px, transparent 2px);
+  }
+  .construction { position: absolute; inset: 0; pointer-events: none; opacity: .25; }
+
+  .wordmark-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 12px;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-size: clamp(72px, 12vw, 156px);
+    line-height: 0.85;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    transform: rotate(-0.4deg);
+    position: relative;
+    z-index: 2;
+  }
+  .wordmark-underline { display: block; margin-top: 4px; width: 100%; max-width: 720px; height: 18px; }
+  .signature-block {
+    text-align: right;
+    transform: rotate(0.6deg);
+    margin-top: 18px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    position: relative;
+    z-index: 2;
+  }
+  .signature-block .stamp {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--red);
+    border: 2px solid var(--red);
+    padding: 4px 12px;
+    display: inline-block;
+    transform: rotate(-3deg);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .signature-block .hand {
+    font-family: var(--font-hand);
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+    margin: 8px 0 4px;
+    transform: rotate(-2deg);
+    display: inline-block;
+  }
+  .tagline {
+    font-family: var(--font-hand);
+    font-size: 30px;
+    color: var(--ink-2);
+    transform: rotate(-0.8deg);
+    margin-top: 8px;
+    margin-left: 8px;
+    max-width: 24ch;
+    line-height: 1.3;
+    position: relative;
+    z-index: 2;
+  }
+
+  .drawing-wrap {
+    position: relative;
+    margin-top: 64px;
+    margin-bottom: 80px;
+  }
+  .drawing-wrap .scribble {
+    position: absolute;
+    font-family: var(--font-hand);
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.3;
+    z-index: 6;
+  }
+  .drawing-wrap .scribble.red { color: var(--red); }
+  .drawing-wrap .label-block {
+    position: absolute;
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--ink);
+    text-transform: none;
+    line-height: 1;
+    background: var(--paper);
+    padding: 0 6px;
+    z-index: 7;
+  }
+  .drawing-wrap .small-mono {
+    position: absolute;
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 7;
+  }
+  .drawing-svg { width: 100%; height: auto; display: block; }
+
+  .palette-strip { margin-top: 96px; position: relative; padding-left: 12px; }
+  .palette-strip .header {
+    font-family: var(--font-hand);
+    font-size: 26px;
+    color: var(--red);
+    transform: rotate(-1deg);
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+  .swatches { display: flex; flex-wrap: wrap; gap: 28px 20px; align-items: flex-end; }
+  .swatch { width: 96px; transform: rotate(var(--rot, -1deg)); position: relative; }
+  .swatch .chip { height: 96px; background: var(--c); box-shadow: 2px 3px 6px rgba(34,22,16,.18); }
+  .swatch .label { margin-top: 6px; font-family: var(--font-body); font-size: 11px; line-height: 1.3; color: var(--ink-2); }
+  .swatch .label strong { display: block; color: var(--ink); font-weight: normal; font-size: 13px; }
+  .swatch::before {
+    content: "";
+    position: absolute;
+    top: -8px; left: 32px;
+    width: 32px;
+    height: 14px;
+    background: rgba(232, 220, 186, .65);
+    border-left: 1px dashed rgba(34,22,16,.15);
+    border-right: 1px dashed rgba(34,22,16,.15);
+    transform: rotate(-4deg);
+    box-shadow: 0 1px 2px rgba(34,22,16,.08);
+  }
+
+  .typewriter-page {
+    margin-top: 96px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: flex-start;
+  }
+  @media (max-width: 900px) { .typewriter-page { grid-template-columns: 1fr; } }
+  .typewriter-page .header {
+    font-family: var(--font-hand);
+    font-size: 26px;
+    color: var(--red);
+    transform: rotate(-1deg);
+    margin-bottom: 20px;
+    grid-column: 1 / -1;
+  }
+  .specimen .spec-head {
+    font-family: var(--font-display);
+    font-size: 56px;
+    line-height: 1;
+    color: var(--ink);
+    transform: rotate(-0.3deg);
+    display: inline-block;
+  }
+  .specimen .spec-sub {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-top: 12px;
+    margin-bottom: 18px;
+  }
+  .specimen .spec-body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink);
+    max-width: 44ch;
+  }
+  .specimen .spec-body .struck { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--red); }
+  .specimen .spec-body .correction {
+    font-family: var(--font-hand);
+    font-size: 18px;
+    color: var(--red);
+    margin-left: 6px;
+    display: inline-block;
+    transform: translateY(-4px) rotate(-3deg);
+  }
+  .specimen .spec-hand {
+    font-family: var(--font-hand);
+    font-size: 24px;
+    color: var(--ink);
+    margin-top: 24px;
+    line-height: 1.3;
+    transform: rotate(-1deg);
+    display: inline-block;
+  }
+
+  .inset-row {
+    margin-top: 96px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: flex-start;
+  }
+  @media (max-width: 900px) { .inset-row { grid-template-columns: 1fr; gap: 80px; } }
+  .inset-row .row-header {
+    grid-column: 1 / -1;
+    font-family: var(--font-hand);
+    font-size: 26px;
+    color: var(--red);
+    transform: rotate(-1deg);
+    margin-bottom: 24px;
+  }
+  .inset {
+    position: relative;
+    background: #F2E7C6;
+    transform: rotate(var(--tilt, -1.3deg));
+    box-shadow: 0 6px 14px rgba(34, 22, 16, .28), 0 1px 0 rgba(255,255,255,.4) inset;
+    padding: 28px;
+    clip-path: polygon(0.5% 1.5%, 99.4% 0.2%, 99.8% 99.5%, 0.2% 99.0%);
+  }
+  .inset::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 40%;
+    width: 90px;
+    height: 22px;
+    background: rgba(232, 220, 186, .85);
+    border-left: 1px dashed rgba(34, 22, 16, .2);
+    border-right: 1px dashed rgba(34, 22, 16, .2);
+    transform: translateX(-50%) rotate(-3deg);
+    box-shadow: 0 2px 3px rgba(34, 22, 16, .15);
+  }
+  .inset-caption {
+    font-family: var(--font-hand);
+    font-size: 20px;
+    color: var(--red);
+    margin-top: 18px;
+    transform: rotate(0.6deg);
+    display: inline-block;
+  }
+  .auth-mock { padding: 36px 16px; text-align: center; }
+  .auth-mock .wm { font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--ink); transform: rotate(-0.5deg); display: inline-block; }
+  .auth-mock .sub { font-family: var(--font-hand); font-size: 20px; color: var(--ink-2); margin-top: 12px; transform: rotate(-1deg); display: inline-block; }
+  .auth-mock .email-line { margin-top: 32px; font-family: var(--font-body); font-size: 14px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.16em; }
+  .auth-mock .email-line .field { display: block; margin: 8px auto 0; width: 80%; font-family: var(--font-body); font-size: 18px; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .auth-mock .submit-line { margin-top: 28px; font-family: var(--font-display); font-size: 18px; color: var(--red); letter-spacing: 0.04em; cursor: pointer; display: inline-block; padding-bottom: 4px; }
+  .auth-mock svg.underline { display: block; margin: 0 auto 24px; }
+  .auth-mock svg.input-line { display: block; margin: 4px auto 0; width: 80%; }
+  .auth-mock svg.submit-underline { display: block; margin: 4px auto 0; }
+
+  .detail-mock { padding: 24px 8px 8px; font-family: var(--font-body); }
+  .detail-mock .title { font-family: var(--font-display); font-size: 24px; color: var(--ink); transform: rotate(-0.3deg); display: inline-block; margin-bottom: 4px; }
+  .detail-mock .sub { font-family: var(--font-hand); font-size: 18px; color: var(--red); margin-bottom: 20px; transform: rotate(-0.8deg); display: inline-block; }
+  .detail-mock .meta-row { font-family: var(--font-body); font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.1em; display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+  .detail-mock .meta-row strong { color: var(--ink); font-weight: normal; font-family: var(--font-display); font-size: 14px; text-transform: none; letter-spacing: 0; display: block; margin-top: 2px; }
+  .detail-mock table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 14px; }
+  .detail-mock thead th { text-align: left; padding: 6px 8px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-2); font-weight: normal; border-bottom: 0; }
+  .detail-mock thead { border-bottom: 1px solid var(--ink); }
+  .detail-mock tbody td { padding: 10px 8px; }
+  .detail-mock tbody tr + tr td { background-image: linear-gradient(90deg, var(--ink-3) 50%, transparent 50%); background-size: 6px 1px; background-repeat: repeat-x; background-position: top; }
+  .detail-mock .zone-name { font-family: var(--font-display); font-size: 15px; color: var(--ink); }
+  .detail-mock .up { color: var(--olive); }
+  .detail-mock .down { color: var(--red); }
+  .detail-mock .flat { color: var(--ink-3); }
+
+  .plate-2 {
+    max-width: 1280px;
+    margin: 96px auto 0;
+    background: var(--blueprint);
+    color: var(--blueprint-line);
+    position: relative;
+    padding: 56px 48px 64px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    background-image:
+      radial-gradient(ellipse 800px 400px at 20% 30%, rgba(20, 58, 96, .8), transparent 70%),
+      radial-gradient(ellipse 700px 350px at 80% 75%, rgba(8, 30, 56, .8), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(232, 220, 186, .025) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, rgba(232, 220, 186, .025) 0 1px, transparent 1px 32px);
+  }
+  .plate-2 .corner-stamp { position: absolute; top: 24px; right: 32px; font-family: var(--font-display); font-size: 20px; color: var(--blueprint-gold); border: 1.5px solid var(--blueprint-gold); padding: 4px 12px; transform: rotate(2deg); letter-spacing: 0.06em; }
+  .plate-2 h2 { font-family: var(--font-display); font-size: 80px; line-height: 1; color: var(--blueprint-line); letter-spacing: -0.01em; transform: rotate(-0.3deg); margin-bottom: 8px; }
+  .plate-2 .sub { font-family: var(--font-hand); font-size: 24px; color: var(--blueprint-gold); transform: rotate(-1deg); display: inline-block; margin-bottom: 40px; }
+  .map-canvas { position: relative; height: 540px; overflow: hidden; }
+  .map-canvas svg.bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map-canvas .scribble { position: absolute; font-family: var(--font-hand); color: var(--blueprint-gold); font-size: 18px; z-index: 3; line-height: 1.3; }
+  .map-canvas .label-block { position: absolute; font-family: var(--font-display); font-size: 16px; color: var(--blueprint-line); z-index: 4; line-height: 1; background: var(--blueprint); padding: 0 6px; }
+  .map-canvas .label-block.gold { color: var(--blueprint-gold); }
+  .index-strip { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 24px; z-index: 5; font-family: var(--font-display); font-size: 16px; }
+  .index-strip span { color: var(--blueprint-line); padding: 4px 8px; cursor: pointer; }
+  .index-strip span.active { color: var(--blueprint-gold); border-bottom: 1.5px solid var(--blueprint-gold); }
+  .legend-strip { position: absolute; bottom: 16px; left: 16px; z-index: 5; font-family: var(--font-body); font-size: 11px; color: var(--blueprint-line); text-transform: uppercase; letter-spacing: 0.1em; }
+  .legend-strip .name { font-family: var(--font-display); font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--blueprint-gold); margin-bottom: 6px; display: block; }
+  .legend-strip .bar { width: 240px; height: 8px; background: linear-gradient(to right, #3B2C4D, #9B7AA3, #D9C9B0, #7A9B5C, #2D4A1E); }
+  .legend-strip .ticks { display: flex; justify-content: space-between; width: 240px; margin-top: 4px; color: rgba(232,220,186,.6); font-size: 10px; }
+  .legend-strip .cap { font-family: var(--font-hand); font-size: 14px; color: var(--blueprint-gold); text-transform: none; letter-spacing: 0; margin-top: 6px; display: block; }
+  .compass-sm { position: absolute; top: 60px; right: 24px; width: 86px; height: 86px; z-index: 5; }
+  .draft-flight { position: absolute; bottom: 16px; right: 24px; z-index: 5; font-family: var(--font-display); color: var(--blueprint-gold); font-size: 18px; cursor: pointer; padding-bottom: 4px; }
+
+  .plate-sig { margin-top: 64px; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; position: relative; z-index: 4; }
+  .plate-sig .left { font-family: var(--font-hand); font-size: 36px; color: var(--ink); transform: rotate(-2deg); display: inline-block; }
+  .plate-sig .center { font-family: var(--font-body); font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.14em; text-align: center; line-height: 1.5; }
+  .plate-sig .right { width: 110px; height: 110px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="3" />
+      <feDisplacementMap in="SourceGraphic" scale="2.5" />
+    </filter>
+    <filter id="rough-strong" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" />
+      <feDisplacementMap in="SourceGraphic" scale="3.5" />
+    </filter>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#221610" stroke-width="0.7" />
+    </pattern>
+    <pattern id="hatch-blue" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#E8DCBA" stroke-width="0.5" opacity="0.5" />
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7C2A1C"/>
+    </marker>
+    <marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#221610"/>
+    </marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#EFC44B"/>
+    </marker>
+  </defs>
+</svg>
+
+<article class="plate">
+
+  <svg class="construction" preserveAspectRatio="none" viewBox="0 0 100 100">
+    <line x1="0" y1="20" x2="100" y2="20" stroke="#221610" stroke-width="0.05" stroke-dasharray="0.4 0.6"/>
+    <line x1="0" y1="55" x2="100" y2="55" stroke="#221610" stroke-width="0.05" stroke-dasharray="0.4 0.6"/>
+    <line x1="22" y1="0" x2="22" y2="100" stroke="#221610" stroke-width="0.05" stroke-dasharray="0.4 0.6"/>
+    <line x1="78" y1="0" x2="78" y2="100" stroke="#221610" stroke-width="0.05" stroke-dasharray="0.4 0.6"/>
+  </svg>
+
+  <div class="wordmark-row">
+    <div>
+      <h1 class="wordmark">Superintendent</h1>
+      <svg class="wordmark-underline" viewBox="0 0 720 18" preserveAspectRatio="none">
+        <path filter="url(#rough)" d="M 4 9 Q 100 4 220 10 T 480 8 T 716 11" stroke="#221610" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path filter="url(#rough)" d="M 30 15 Q 200 13 420 16 T 700 14" stroke="#221610" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+      <div class="tagline">a plan for the land<br/>you tend &mdash; drafted,<br/>dated &amp; signed.</div>
+    </div>
+    <div class="signature-block">
+      <div class="stamp">DRAFT</div>
+      <div>plate <strong style="color:var(--ink); font-family:var(--font-display); font-size:16px;">No. 1</strong></div>
+      <div>drafted <strong style="color:var(--ink); font-family:var(--font-display); font-size:16px;">5 / 29 / 26</strong></div>
+      <div class="hand">C. Smith</div>
+      <div>architect / OKC</div>
+    </div>
+  </div>
+
+  <div class="drawing-wrap">
+    <svg class="drawing-svg" viewBox="0 0 1200 560">
+      <path filter="url(#rough)" d="M 60 60 L 1140 80 L 1130 510 L 80 500 Z" fill="none" stroke="#221610" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path filter="url(#rough-strong)" d="M 70 72 L 1130 92 L 1118 498 L 92 488 Z" fill="none" stroke="#221610" stroke-width="0.7" stroke-linejoin="round" opacity="0.4"/>
+      <rect filter="url(#rough)" x="160" y="120" width="280" height="160" fill="url(#hatch)" stroke="#221610" stroke-width="1.6" opacity="0.95"/>
+      <path filter="url(#rough)" d="M 480 300 Q 520 280 600 285 L 760 290 Q 820 295 830 360 L 820 440 Q 600 460 480 440 Z" fill="rgba(124,122,52,0.07)" stroke="#221610" stroke-width="2" stroke-linejoin="round"/>
+      <path filter="url(#rough)" d="M 880 130 L 1080 140 L 1080 360 L 880 360 Z" fill="rgba(124,42,28,0.06)" stroke="#221610" stroke-width="1.6" stroke-dasharray="8 5"/>
+      <path filter="url(#rough)" d="M 60 340 L 800 350 L 800 380 L 60 370 Z" fill="rgba(34,22,16,0.08)" stroke="#221610" stroke-width="1.2"/>
+      <path filter="url(#rough)" d="M 140 410 Q 200 390 280 410 Q 340 430 380 415 Q 420 400 460 420 L 460 480 L 140 475 Z" fill="rgba(15,42,71,0.18)" stroke="#0F2A47" stroke-width="1.4"/>
+      <path filter="url(#rough)" d="M 170 435 Q 220 425 280 433" stroke="#0F2A47" stroke-width="1" fill="none" opacity="0.6"/>
+      <path filter="url(#rough)" d="M 330 442 Q 380 432 420 442" stroke="#0F2A47" stroke-width="1" fill="none" opacity="0.6"/>
+      <path filter="url(#rough)" d="M 540 95 Q 360 130 280 175" stroke="#7C2A1C" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <path filter="url(#rough)" d="M 980 460 Q 950 420 950 380" stroke="#7C2A1C" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+      <path filter="url(#rough)" d="M 60 250 Q 200 245 280 280" stroke="#221610" stroke-width="1.2" fill="none" marker-end="url(#arrow-ink)"/>
+      <path filter="url(#rough)" d="M 1150 200 Q 1110 220 1080 240" stroke="#221610" stroke-width="1.2" fill="none" marker-end="url(#arrow-ink)"/>
+      <line x1="160" y1="105" x2="440" y2="105" stroke="#221610" stroke-width="0.8" stroke-dasharray="3 2"/>
+      <line x1="160" y1="98" x2="160" y2="112" stroke="#221610" stroke-width="1"/>
+      <line x1="440" y1="98" x2="440" y2="112" stroke="#221610" stroke-width="1"/>
+    </svg>
+
+    <span class="label-block" style="top: 26%; left: 14%;">Raised Bed&nbsp;·&nbsp;N</span>
+    <span class="label-block" style="top: 60%; left: 50%;">Lawn</span>
+    <span class="label-block" style="top: 23%; left: 73%;">Native border</span>
+    <span class="label-block" style="top: 64%; left: 6%;">path</span>
+    <span class="label-block" style="top: 78%; left: 18%;">water</span>
+
+    <span class="small-mono" style="top: 16%; left: 23%;">280' × 160'</span>
+    <span class="small-mono" style="top: 51%; left: 4%; transform: rotate(-2deg);">8 ft wide</span>
+
+    <div class="scribble red" style="top: 4%; left: 35%; width: 230px;">
+      raised bed — likely dry by July ?
+    </div>
+    <div class="scribble red" style="top: 80%; left: 70%; width: 220px;">
+      south slope — burn next dormancy ✓
+    </div>
+    <div class="scribble" style="top: 36%; left: 0%; width: 130px;">
+      compaction along edge
+    </div>
+    <div class="scribble" style="top: 30%; right: -10px; width: 130px;">
+      sun all afternoon
+    </div>
+  </div>
+
+  <div class="palette-strip">
+    <div class="header">paint chips — drafting paper&nbsp;</div>
+    <div class="swatches">
+      <div class="swatch" style="--c:#E8DCBA; --rot:-2deg"><div class="chip"></div><div class="label"><strong>paper</strong>#E8DCBA</div></div>
+      <div class="swatch" style="--c:#D9C99B; --rot: 1deg"><div class="chip"></div><div class="label"><strong>paper.2</strong>#D9C99B</div></div>
+      <div class="swatch" style="--c:#221610; --rot:-1deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">ink</strong>#221610</div></div>
+      <div class="swatch" style="--c:#4E3826; --rot: 2deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">ink.2</strong>#4E3826</div></div>
+      <div class="swatch" style="--c:#7C2A1C; --rot:-2deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">red</strong>#7C2A1C</div></div>
+      <div class="swatch" style="--c:#B58A33; --rot: 1deg"><div class="chip"></div><div class="label"><strong>gold</strong>#B58A33</div></div>
+      <div class="swatch" style="--c:#5C5E2C; --rot:-1deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">olive</strong>#5C5E2C</div></div>
+    </div>
+
+    <div class="header" style="margin-top:48px;">paint chips — cyanotype map&nbsp;</div>
+    <div class="swatches">
+      <div class="swatch" style="--c:#0F2A47; --rot:-2deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">blueprint</strong>#0F2A47</div></div>
+      <div class="swatch" style="--c:#143A60; --rot: 1deg"><div class="chip"></div><div class="label" style="color:var(--paper)"><strong style="color:var(--paper)">bp.2</strong>#143A60</div></div>
+      <div class="swatch" style="--c:#E8DCBA; --rot:-1deg"><div class="chip"></div><div class="label"><strong>line</strong>#E8DCBA</div></div>
+      <div class="swatch" style="--c:#EFC44B; --rot: 2deg"><div class="chip"></div><div class="label"><strong>gold</strong>#EFC44B</div></div>
+    </div>
+  </div>
+
+  <div class="typewriter-page">
+    <div class="header">type — three voices&nbsp;</div>
+
+    <div class="specimen">
+      <div class="spec-head">Superintendent</div>
+      <div class="spec-sub">Aclonica · headers, wordmark, only when it earns it</div>
+      <div class="spec-body">
+        Notes from this morning. The lawn is recovering after the rain. The native
+        border is <span class="struck">struggling</span><span class="correction">holding ↑</span>. Compaction near the path looks
+        suspicious — check moisture next pass.
+      </div>
+      <div class="spec-hand">replant the south bed after the next mow ✓</div>
+    </div>
+
+    <div class="specimen">
+      <div class="spec-head" style="font-size:42px;">FLIGHT&nbsp;No.&nbsp;04</div>
+      <div class="spec-sub">Special Elite · all body, data, monospace</div>
+      <div class="spec-body" style="font-family: var(--font-body);">
+        PARCEL: OKC-HOME-01<br/>
+        FLOWN:  2026-05-24 14:14<br/>
+        DRONE:  DJI Flip · RGB<br/>
+        ZONES:  4 · area 2,862 sq ft<br/>
+        MEAN VARI: 0.31 &nbsp; Δ +0.04 ↑
+      </div>
+      <div class="spec-hand">"don't trust the gli on bare soil"</div>
+    </div>
+  </div>
+
+  <div class="inset-row">
+    <div class="row-header">drafted screens — pinned for review</div>
+
+    <div>
+      <div class="inset" style="--tilt: -1.5deg;">
+        <div class="auth-mock">
+          <div class="wm">Superintendent</div>
+          <svg class="underline" viewBox="0 0 280 12" width="280" height="12" preserveAspectRatio="none">
+            <path filter="url(#rough)" d="M 4 6 Q 80 2 160 7 T 276 5" stroke="#221610" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          </svg>
+          <div class="sub">a plan for the land you tend.</div>
+
+          <div class="email-line">
+            email
+            <span class="field">cner.smith@gmail.com</span>
+            <svg class="input-line" viewBox="0 0 240 6" height="6" preserveAspectRatio="none">
+              <path filter="url(#rough)" d="M 0 3 Q 60 1 120 4 T 240 3" stroke="#221610" stroke-width="1.4" fill="none"/>
+            </svg>
+          </div>
+
+          <div class="submit-line">→ send me a link</div>
+          <svg class="submit-underline" viewBox="0 0 160 8" width="160" height="8" preserveAspectRatio="none">
+            <path filter="url(#rough)" d="M 0 4 Q 40 1 80 5 T 160 3" stroke="#7C2A1C" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="inset-caption">S1 — sign in</div>
+    </div>
+
+    <div>
+      <div class="inset" style="--tilt: 1.2deg;">
+        <div class="detail-mock">
+          <div class="title">Flight No. 04</div>
+          <br/>
+          <div class="sub">per-zone aggregates — VARI, GLI, ExG</div>
+
+          <div class="meta-row">
+            <div>drafted<strong>May 24, 2026</strong></div>
+            <div>drone<strong>DJI Flip</strong></div>
+            <div>weather<strong>clear · 78°F</strong></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Zone</th><th>VARI</th><th>GLI</th><th>ExG</th><th>Δ vs prev</th></tr></thead>
+            <tbody>
+              <tr><td><span class="zone-name">Raised Bed N</span></td><td>0.42</td><td>0.38</td><td>0.51</td><td class="up">+0.04 ↑</td></tr>
+              <tr><td><span class="zone-name">Lawn</span></td><td>0.28</td><td>0.31</td><td>0.39</td><td class="down">−0.02 ↓</td></tr>
+              <tr><td><span class="zone-name">Native Border</span></td><td>0.35</td><td>0.34</td><td>0.44</td><td class="up">+0.01 ↑</td></tr>
+              <tr><td><span class="zone-name">Path</span></td><td>0.04</td><td>0.06</td><td>0.09</td><td class="flat">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="inset-caption">S5 — flight detail</div>
+    </div>
+  </div>
+
+  <div class="plate-sig">
+    <div class="left">C. Smith</div>
+    <div class="center">
+      <svg viewBox="0 0 200 50" width="220" height="55">
+        <line x1="10" y1="35" x2="190" y2="35" stroke="#221610" stroke-width="1.5"/>
+        <line x1="10" y1="25" x2="10" y2="45" stroke="#221610" stroke-width="1.5"/>
+        <line x1="55" y1="30" x2="55" y2="40" stroke="#221610" stroke-width="1"/>
+        <line x1="100" y1="27" x2="100" y2="43" stroke="#221610" stroke-width="1.2"/>
+        <line x1="145" y1="30" x2="145" y2="40" stroke="#221610" stroke-width="1"/>
+        <line x1="190" y1="25" x2="190" y2="45" stroke="#221610" stroke-width="1.5"/>
+        <text x="10" y="20" text-anchor="middle" font-family="Special Elite" font-size="10" fill="#221610">0</text>
+        <text x="100" y="20" text-anchor="middle" font-family="Special Elite" font-size="10" fill="#221610">25</text>
+        <text x="190" y="20" text-anchor="middle" font-family="Special Elite" font-size="10" fill="#221610">50 yd</text>
+      </svg>
+      <br/>
+      drafted in oklahoma · 2026
+    </div>
+    <svg class="right" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r="48" fill="none" stroke="#221610" stroke-width="1.4" filter="url(#rough)"/>
+      <circle cx="55" cy="55" r="40" fill="none" stroke="#221610" stroke-width="0.6" stroke-dasharray="2 3" filter="url(#rough)"/>
+      <polygon points="55,10 51,55 55,50 59,55" fill="#7C2A1C" filter="url(#rough)"/>
+      <polygon points="55,100 51,55 55,60 59,55" fill="none" stroke="#221610" stroke-width="1" filter="url(#rough)"/>
+      <polygon points="10,55 55,51 50,55 55,59" fill="none" stroke="#221610" stroke-width="1" filter="url(#rough)"/>
+      <polygon points="100,55 55,51 60,55 55,59" fill="none" stroke="#221610" stroke-width="1" filter="url(#rough)"/>
+      <text x="55" y="9" text-anchor="middle" font-family="Aclonica" font-size="10" fill="#221610">N</text>
+    </svg>
+  </div>
+
+</article>
+
+<article class="plate-2">
+  <div class="corner-stamp">PLATE&nbsp;No.&nbsp;2</div>
+  <h2>The map.</h2>
+  <div class="sub">cyanotype — drafted on blueprint, signed in gold.</div>
+
+  <div class="map-canvas">
+
+    <svg class="bg" viewBox="0 0 1200 540" preserveAspectRatio="xMidYMid meet">
+      <path filter="url(#rough)" d="M 60 50 L 1140 70 L 1130 490 L 80 480 Z" fill="none" stroke="#E8DCBA" stroke-width="2" stroke-linejoin="round"/>
+      <rect filter="url(#rough)" x="380" y="240" width="380" height="180" fill="url(#hatch-blue)" stroke="#E8DCBA" stroke-width="1.4"/>
+      <rect filter="url(#rough)" x="150" y="100" width="280" height="160" fill="none" stroke="#E8DCBA" stroke-width="1.6"/>
+      <path filter="url(#rough)" d="M 820 110 L 1080 130 L 1080 350 L 820 350 Z" fill="rgba(232, 220, 186, 0.04)" stroke="#E8DCBA" stroke-width="1.4" stroke-dasharray="8 5"/>
+      <path filter="url(#rough)" d="M 580 360 L 880 380 L 870 460 L 580 450 Z" fill="rgba(239, 196, 75, 0.12)" stroke="#EFC44B" stroke-width="2"/>
+      <path filter="url(#rough)" d="M 60 320 L 1080 330 L 1080 348 L 60 340 Z" fill="none" stroke="#E8DCBA" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+      <path filter="url(#rough)" d="M 360 60 Q 250 90 220 140" stroke="#EFC44B" stroke-width="1.4" fill="none" marker-end="url(#arrow-gold)"/>
+      <path filter="url(#rough)" d="M 940 500 Q 870 460 770 420" stroke="#EFC44B" stroke-width="1.4" fill="none" marker-end="url(#arrow-gold)"/>
+      <line x1="150" y1="85" x2="430" y2="85" stroke="#E8DCBA" stroke-width="0.8" stroke-dasharray="3 2"/>
+      <line x1="150" y1="78" x2="150" y2="92" stroke="#E8DCBA" stroke-width="1"/>
+      <line x1="430" y1="78" x2="430" y2="92" stroke="#E8DCBA" stroke-width="1"/>
+    </svg>
+
+    <span class="label-block" style="top: 22%; left: 16%;">Raised Bed&nbsp;·&nbsp;N</span>
+    <span class="label-block" style="top: 52%; left: 42%;">Lawn</span>
+    <span class="label-block" style="top: 24%; left: 70%;">Native border</span>
+    <span class="label-block gold" style="top: 76%; left: 50%;">Native&nbsp;S&nbsp;◆</span>
+
+    <div class="scribble" style="top: 2%; left: 18%; width: 260px;">
+      12 yd carry over native — likely dry by July
+    </div>
+    <div class="scribble" style="bottom: 4%; right: 5%; width: 230px;">
+      south slope — burn next dormancy?
+    </div>
+
+    <div class="index-strip">
+      <span>Ortho</span>
+      <span class="active">VARI</span>
+      <span>GLI</span>
+      <span>ExG</span>
+    </div>
+
+    <svg class="compass-sm" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r="48" fill="none" stroke="#E8DCBA" stroke-width="1" filter="url(#rough)"/>
+      <circle cx="55" cy="55" r="40" fill="none" stroke="rgba(232,220,186,0.5)" stroke-width="0.6" stroke-dasharray="2 3" filter="url(#rough)"/>
+      <polygon points="55,10 51,55 55,50 59,55" fill="#EFC44B" filter="url(#rough)"/>
+      <polygon points="55,100 51,55 55,60 59,55" fill="none" stroke="#E8DCBA" stroke-width="0.8" filter="url(#rough)"/>
+      <text x="55" y="9" text-anchor="middle" font-family="Aclonica" font-size="10" fill="#EFC44B">N</text>
+    </svg>
+
+    <div class="legend-strip">
+      <span class="name">VARI</span>
+      <div class="bar"></div>
+      <div class="ticks"><span>−1.0</span><span>0.0</span><span>+1.0</span></div>
+      <span class="cap">higher = healthier vegetation</span>
+    </div>
+
+    <div class="draft-flight">+ draft new flight</div>
+
+  </div>
+</article>
+
+</body>
+</html>
