@@ -1,3 +1,9 @@
+/**
+ * audit.ts — withAudit(): runs a domain write and its audit_log row inside one
+ * Drizzle transaction so they commit or roll back together. The audit_log is
+ * append-only and required for every mutation (conservation audit trail), so all
+ * write paths wrap their work in this helper rather than inserting log rows ad hoc.
+ */
 import type { DbClient } from "@superintendent/db";
 import { auditLog } from "@superintendent/db";
 

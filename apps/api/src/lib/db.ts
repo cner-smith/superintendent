@@ -1,3 +1,9 @@
+/**
+ * db.ts — the shared Drizzle client for the API, built from DATABASE_URL.
+ * Exported as TransactionalDbClient so callers can use db.transaction() (the
+ * postgres-js adapter exposes it at runtime; the cast surfaces it to the types).
+ * Every route imports this single instance — there is one writer to the DB.
+ */
 import { createDbClient, type DbClient } from "@superintendent/db";
 import type { TransactionalDbClient } from "./audit.js";
 

@@ -1,3 +1,11 @@
+/**
+ * schema.ts — the v0.1 data model (Drizzle + PostGIS), source of truth for the
+ * migration in packages/db/migrations. parcels → zones (drawn polygons) and
+ * flights (drone captures); each flight yields raster_layers (index overlays) and
+ * zone_index_aggregates (per-zone VARI/GLI/ExG stats). audit_log is append-only
+ * and every domain write must add a row to it in the same transaction. PostGIS
+ * geometry/geography use customType since Drizzle has no native spatial types.
+ */
 import {
   pgTable,
   pgEnum,

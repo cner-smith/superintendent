@@ -1,3 +1,9 @@
+/**
+ * index.ts — API entry point. Builds the Hono app, mounts the parcels and
+ * flights routers, and exposes GET /health (which also checks DB connectivity).
+ * This process is the single writer to Postgres + Supabase Storage; all domain
+ * mutations flow through these routers and the withAudit() transaction helper.
+ */
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { logger } from "hono/logger";
