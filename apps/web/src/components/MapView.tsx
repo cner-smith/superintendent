@@ -21,9 +21,9 @@ import styles from "./MapView.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-/** Default parcel — Pine Hollow Estate approximate centre */
-const DEFAULT_CENTER: [number, number] = [-89.3985, 43.0731]; // Madison WI area
-const DEFAULT_ZOOM = 15;
+/** Map default — matches the seeded demo parcel (Pine Hollow Garden). */
+const DEFAULT_CENTER: [number, number] = [-86.576, 39.269];
+const DEFAULT_ZOOM = 16;
 
 /**
  * No-API-key base map style.

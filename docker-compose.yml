@@ -1,0 +1,23 @@
+# Local Postgres + PostGIS for development only. Bring up with
+# `scripts/dev-up.sh` (recommended) or `docker compose up -d db`.
+# Data persists in the named volume; delete it to reset. Not for production.
+services:
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: superintendent-db
+    environment:
+      POSTGRES_USER: superintendent
+      POSTGRES_PASSWORD: superintendent
+      POSTGRES_DB: superintendent
+    ports:
+      - "54329:5432"
+    volumes:
+      - superintendent-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superintendent"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  superintendent-pgdata:

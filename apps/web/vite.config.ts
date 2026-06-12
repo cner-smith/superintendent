@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 5173, // predictable dev port (3000 is often already in use)
     proxy: {
       // Proxy all /api/* requests to the Hono backend during development.
       // The prefix is stripped so GET /api/health → GET /health on the API.
