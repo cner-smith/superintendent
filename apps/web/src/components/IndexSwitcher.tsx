@@ -62,8 +62,6 @@ export function IndexSwitcher({
         />
         <span className={styles.sliderValue}>{Math.round(opacity * 100)}%</span>
       </div>
-
-      <div className={styles.indexNote}>Raster source: TODO</div>
     </div>
   );
 }

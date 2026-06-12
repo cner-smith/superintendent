@@ -1,14 +1,13 @@
 /**
  * MapView.tsx — MapLibre GL map with TerraDraw zone drawing, index switcher,
- * zone rendering, and graceful no-backend fallback.
+ * zone rendering, and raster vegetation-index overlay driven by IndexSwitcher.
  *
  * Called by: App.tsx
- * Data: parcels/:id/zones (GET on mount, POST on zone save), GeoJSON FeatureCollection
- * No existing duplicate map component found.
- * Instruction: build the v0.1 map + zone-drawing UI
+ * Data: parcels/:id/zones, parcels/:id/flights, flights/:id/layers.
+ * Instruction: wire index overlays onto the map.
  */
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import maplibregl, { type Map as MapLibreMap, type GeoJSONSource } from "maplibre-gl";
+import maplibregl, { type Map as MapLibreMap, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { TerraDraw, TerraDrawPolygonMode, TerraDrawRenderMode } from "terra-draw";
 
@@ -26,10 +25,24 @@ const DEFAULT_CENTER: [number, number] = [-86.576, 39.269];
 const DEFAULT_ZOOM = 16;
 
 /**
- * No-API-key base map style.
- * demotiles.maplibre.org hosts a free vector tile demo style.
+ * Base map — Esri World Imagery (aerial, no API key). demotiles has no data at
+ * field zoom, so we use satellite tiles to give the index overlay real context.
  */
-const BASE_STYLE = "https://demotiles.maplibre.org/style.json";
+const BASE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    satellite: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+    },
+  },
+  layers: [{ id: "satellite-base", type: "raster", source: "satellite" }],
+};
 
 /** Parcel ID used for API calls in this v0.1 build. */
 const PARCEL_ID = "1";
@@ -82,6 +95,27 @@ interface ApiZone {
   geom: string; // GeoJSON geometry string or WKT from DB
 }
 
+interface ApiFlightSummary {
+  id: string;
+  status: string;
+  capturedAt: string;
+}
+
+interface ApiLayer {
+  indexKind: string;
+  url: string;
+  bounds: [number, number, number, number]; // [west, south, east, north]
+}
+
+/** Per-index overlay info ready for the map. */
+interface OverlayLayer {
+  url: string;
+  bounds: [number, number, number, number];
+}
+
+/** Map of VegetationIndex key (uppercase, e.g. "VARI") → overlay. */
+type LayersByIndex = Partial<Record<VegetationIndex, OverlayLayer>>;
+
 interface PendingZone {
   geometry: GeoJSON.Polygon;
   /** terra-draw feature id — kept so we can remove it after save/cancel */
@@ -89,6 +123,42 @@ interface PendingZone {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
+
+/** Map processor indexKind strings to the UI's VegetationIndex labels. */
+const INDEX_KIND_MAP: Record<string, VegetationIndex> = {
+  vari: "VARI",
+  gli:  "GLI",
+  exg:  "ExG",
+};
+
+/**
+ * Fetch the most-recent ready flight for the parcel, then its overlay layers.
+ * Returns an empty record if no ready flight or no layers exist.
+ */
+async function fetchLayersByIndex(parcelId: string): Promise<LayersByIndex> {
+  const flightsRes = await fetch(`/api/parcels/${parcelId}/flights`);
+  if (!flightsRes.ok) return {};
+  const flightsJson = (await flightsRes.json()) as { data: ApiFlightSummary[] };
+  const readyFlights = flightsJson.data
+    .filter((f) => f.status === "ready")
+    .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime());
+
+  const latestFlight = readyFlights[0];
+  if (!latestFlight) return {};
+
+  const layersRes = await fetch(`/api/flights/${latestFlight.id}/layers`);
+  if (!layersRes.ok) return {};
+  const layersJson = (await layersRes.json()) as { data: ApiLayer[] };
+
+  const result: LayersByIndex = {};
+  for (const layer of layersJson.data) {
+    const key = INDEX_KIND_MAP[layer.indexKind];
+    if (key) {
+      result[key] = { url: layer.url, bounds: layer.bounds };
+    }
+  }
+  return result;
+}
 
 /**
  * Attempt to parse a zone's `geom` field as a GeoJSON Polygon.
@@ -144,9 +214,12 @@ export function MapView({ onError }: MapViewProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [pendingZone, setPendingZone] = useState<PendingZone | null>(null);
 
-  // Index switcher state — drives overlay layer (stub source URL)
+  // Index switcher state — drives overlay layer
   const [activeIndex, setActiveIndex] = useState<VegetationIndex>("Ortho");
   const [overlayOpacity, setOverlayOpacity] = useState(0.7);
+
+  // Overlay layers fetched from the API (one per vegetation index)
+  const [layersByIndex, setLayersByIndex] = useState<LayersByIndex>({});
 
   // Track whether map + draw are ready
   const [mapReady, setMapReady] = useState(false);
@@ -163,6 +236,16 @@ export function MapView({ onError }: MapViewProps) {
       onError?.(`Could not load zones — ${msg}`);
     }
   }, [onError]);
+
+  // ── Load overlay layers for the most-recent ready flight ──────────────
+  const loadLayers = useCallback(async () => {
+    try {
+      const layers = await fetchLayersByIndex(PARCEL_ID);
+      setLayersByIndex(layers);
+    } catch {
+      // Non-fatal: map still works without overlays
+    }
+  }, []);
 
   // ── Initialise map ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -224,28 +307,8 @@ export function MapView({ onError }: MapViewProps) {
         },
       });
 
-      // ── Raster index overlay (stub) ────────────────────────────────────
-      // TODO: replace stub URL with real tile endpoint for each index.
-      // Source is added now; layer visibility is toggled via opacity.
-      map.addSource(OVERLAY_SOURCE, {
-        type: "raster",
-        tiles: [
-          // TODO(raster-overlay): replace with real tile URL pattern, e.g.
-          // `https://tiles.example.com/${PARCEL_ID}/{index}/{z}/{x}/{y}.png`
-          "https://via.placeholder.com/256/00000000/00000000",
-        ],
-        tileSize: 256,
-      });
-
-      map.addLayer({
-        id: OVERLAY_LAYER,
-        type: "raster",
-        source: OVERLAY_SOURCE,
-        paint: {
-          "raster-opacity": 0,       // starts hidden; updated by state
-          "raster-fade-duration": 0,
-        },
-      });
+      // Overlay source/layer are added lazily when an index is selected.
+      // See the "Sync overlay → map" effect below.
 
       // ── TerraDraw ─────────────────────────────────────────────────────
       const adapter = new TerraDrawMapLibreGLAdapter({ map });
@@ -279,6 +342,7 @@ export function MapView({ onError }: MapViewProps) {
 
       setMapReady(true);
       void loadZones();
+      void loadLayers();
     });
 
     // ── Resize observer ─────────────────────────────────────────────────
@@ -310,15 +374,56 @@ export function MapView({ onError }: MapViewProps) {
     source.setData(zonesToFeatureCollection(zones));
   }, [zones, mapReady]);
 
-  // ── Sync overlay opacity → map layer ──────────────────────────────────
+  // ── Sync overlay → map (source + layer, placed below zone layers) ─────
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-    if (!map.getLayer(OVERLAY_LAYER)) return;
-    // Show overlay only when a non-Ortho index is selected
-    const targetOpacity = activeIndex === "Ortho" ? 0 : overlayOpacity;
-    map.setPaintProperty(OVERLAY_LAYER, "raster-opacity", targetOpacity);
-  }, [activeIndex, overlayOpacity, mapReady]);
+
+    const layer = activeIndex !== "Ortho" ? layersByIndex[activeIndex] : undefined;
+
+    if (!layer) {
+      // No overlay: remove source+layer if present
+      if (map.getLayer(OVERLAY_LAYER)) map.removeLayer(OVERLAY_LAYER);
+      if (map.getSource(OVERLAY_SOURCE)) map.removeSource(OVERLAY_SOURCE);
+      return;
+    }
+
+    const [w, s, e, n] = layer.bounds;
+    // MapLibre image source coordinates: [nw, ne, se, sw]
+    const coordinates: [[number,number],[number,number],[number,number],[number,number]] = [
+      [w, n], [e, n], [e, s], [w, s],
+    ];
+    const url = `/api${layer.url}`;
+
+    if (map.getSource(OVERLAY_SOURCE)) {
+      // Source already exists — update it in place (swap index or reuse same)
+      const existing = map.getSource(OVERLAY_SOURCE) as maplibregl.ImageSource;
+      existing.updateImage({ url, coordinates });
+      // Opacity may have changed
+      if (map.getLayer(OVERLAY_LAYER)) {
+        map.setPaintProperty(OVERLAY_LAYER, "raster-opacity", overlayOpacity);
+      }
+    } else {
+      // Add image source below the zone fill layer so zones render on top
+      map.addSource(OVERLAY_SOURCE, {
+        type: "image",
+        url,
+        coordinates,
+      });
+      map.addLayer(
+        {
+          id: OVERLAY_LAYER,
+          type: "raster",
+          source: OVERLAY_SOURCE,
+          paint: {
+            "raster-opacity": overlayOpacity,
+            "raster-fade-duration": 150,
+          },
+        },
+        ZONES_FILL_LAYER, // insert before zone fill → overlay is underneath
+      );
+    }
+  }, [activeIndex, overlayOpacity, layersByIndex, mapReady]);
 
   // ── Draw toggle ────────────────────────────────────────────────────────
   const handleDrawToggle = useCallback(() => {
