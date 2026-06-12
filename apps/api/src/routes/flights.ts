@@ -32,7 +32,7 @@ export const createFlightHandler = new Hono<{ Variables: Record<string, never> }
 
 createFlightHandler.post("/", async (c) => {
   // Resolve the route id (the frontend's v0.1 placeholder "1" → the real parcel).
-  const parcelId = await resolveParcelId(c.req.param("id"));
+  const parcelId = await resolveParcelId(c.req.param("id") ?? "");
   const body = await c.req.json<{ capturedAt: string; notes?: string }>();
 
   if (!parcelId) {
