@@ -7,6 +7,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { logger } from "hono/logger";
+import { sql } from "drizzle-orm";
 import { parcelsRouter } from "./routes/parcels.js";
 import { flightsRouter } from "./routes/flights.js";
 
@@ -18,7 +19,7 @@ async function checkDb(): Promise<boolean> {
   try {
     const { db } = await import("./lib/db.js");
     // Run a minimal query to verify connectivity
-    await db.execute("select 1" as unknown as Parameters<typeof db.execute>[0]);
+    await db.execute(sql`select 1`);
     dbReady = true;
     return true;
   } catch {
