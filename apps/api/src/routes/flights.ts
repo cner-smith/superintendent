@@ -18,6 +18,7 @@ import { db } from "../lib/db.js";
 import { withAudit } from "../lib/audit.js";
 import { processFlight } from "../lib/ingest.js";
 import { getStorage, getUploadsDir } from "../lib/storage.js";
+import { resolveParcelId } from "./parcels.js";
 
 export const flightsRouter = new Hono();
 
@@ -30,11 +31,12 @@ export const flightsRouter = new Hono();
 export const createFlightHandler = new Hono<{ Variables: Record<string, never> }>();
 
 createFlightHandler.post("/", async (c) => {
-  const parcelId = c.req.param("id");
+  // Resolve the route id (the frontend's v0.1 placeholder "1" → the real parcel).
+  const parcelId = await resolveParcelId(c.req.param("id"));
   const body = await c.req.json<{ capturedAt: string; notes?: string }>();
 
   if (!parcelId) {
-    return c.json({ error: "parcelId is required" }, 400);
+    return c.json({ error: "no parcel for id" }, 404);
   }
 
   if (!body.capturedAt || typeof body.capturedAt !== "string") {
