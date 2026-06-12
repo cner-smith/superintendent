@@ -1,0 +1,9 @@
+# super-raster build configuration
+#
+# GDAL 3.12 ships no pre-built bindgen bindings in gdal-sys, so bindings are
+# generated at build time via the `bindgen` feature.  libclang 19 (installed at
+# /usr/lib/clang/19) cannot locate stddef.h without an explicit -isystem hint;
+# this env entry makes every plain `cargo build` work without the developer
+# having to export anything manually.
+[env]
+BINDGEN_EXTRA_CLANG_ARGS = "-isystem /usr/lib/clang/19/include"
