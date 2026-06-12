@@ -1,0 +1,10 @@
+[package]
+name = "super-raster"
+version = "0.1.0"
+edition = "2021"
+description = "Phase-2 Rust replacement for the Python flight processor (GDAL vegetation indices)."
+
+[dependencies]
+# bindgen feature: generate FFI bindings at build time — gdal-sys ships no
+# pre-built bindings for GDAL 3.12 (needs libclang).
+gdal = { version = "0.19", features = ["bindgen"] }
