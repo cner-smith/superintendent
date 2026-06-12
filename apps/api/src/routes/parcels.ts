@@ -8,6 +8,7 @@ import { db } from "../lib/db.js";
 import { parcels, zones, flights } from "@superintendent/db";
 import { eq } from "drizzle-orm";
 import { withAudit } from "../lib/audit.js";
+import { createFlightHandler } from "./flights.js";
 
 export const parcelsRouter = new Hono();
 
@@ -86,3 +87,11 @@ parcelsRouter.get("/:id/flights", async (c) => {
     .where(eq(flights.parcelId, parcelId));
   return c.json({ data: rows });
 });
+
+/**
+ * POST /parcels/:id/flights
+ * Create a new flight for a parcel (status: upload).
+ * Body (JSON): { capturedAt: string; notes?: string }
+ * Delegates to createFlightHandler from routes/flights.ts.
+ */
+parcelsRouter.route("/:id/flights", createFlightHandler);
