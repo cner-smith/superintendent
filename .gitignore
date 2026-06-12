@@ -7,6 +7,7 @@ dist/
 *.tsbuildinfo
 coverage/
 .drizzle/
+uploads/
 
 # AI/Claude working docs — keep out of the repo (project rule)
 docs/superpowers/
