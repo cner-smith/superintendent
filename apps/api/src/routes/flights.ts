@@ -1,19 +1,23 @@
 /**
- * routes/flights.ts — flight lifecycle endpoints (create, ortho upload, status poll).
+ * routes/flights.ts — flight lifecycle endpoints (create, ortho upload, status poll,
+ * layers query). Adds GET /flights/:id/layers for overlay metadata consumed by MapView,
+ * and GET /overlays/:flightId/:indexKind.png for serving persisted overlay PNGs.
  *
  * Called by: src/index.ts (app.route("/flights", flightsRouter));
  *   POST /parcels/:id/flights is also wired from parcelsRouter via re-export.
  * Public functions: flightsRouter (Hono), createFlightHandler (mounted in parcelsRouter).
  * Data structures: flights table rows; state machine upload→ingest→ready|failed.
- * User instruction: implement flight upload + ingest state machine, issue #3.
+ * User instruction: wire index overlays onto the map.
  */
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import { flights } from "@superintendent/db";
+import { eq, sql } from "drizzle-orm";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { flights, rasterLayers } from "@superintendent/db";
 import { db } from "../lib/db.js";
 import { withAudit } from "../lib/audit.js";
 import { processFlight } from "../lib/ingest.js";
-import { getStorage } from "../lib/storage.js";
+import { getStorage, getUploadsDir } from "../lib/storage.js";
 
 export const flightsRouter = new Hono();
 
@@ -166,6 +170,38 @@ flightsRouter.get("/:id", async (c) => {
   }
 
   return c.json({ data: row });
+});
+
+// ---------------------------------------------------------------------------
+// GET /flights/:id/layers  — overlay metadata for the map
+//
+// Returns one entry per index kind stored in raster_layers, including the
+// served overlay PNG URL and the geographic bounds as [west,south,east,north].
+// Shape: { data: [{ indexKind, url, bounds: [w,s,e,n] }] }
+// ---------------------------------------------------------------------------
+
+flightsRouter.get("/:id/layers", async (c) => {
+  const flightId = c.req.param("id");
+
+  const rows = await db
+    .select({
+      indexKind: rasterLayers.indexKind,
+      url: rasterLayers.pmtilesPath,
+      west:  sql<number>`ST_XMin(${rasterLayers.bounds})`,
+      south: sql<number>`ST_YMin(${rasterLayers.bounds})`,
+      east:  sql<number>`ST_XMax(${rasterLayers.bounds})`,
+      north: sql<number>`ST_YMax(${rasterLayers.bounds})`,
+    })
+    .from(rasterLayers)
+    .where(eq(rasterLayers.flightId, flightId));
+
+  const data = rows.map((r) => ({
+    indexKind: r.indexKind,
+    url: r.url,
+    bounds: [r.west, r.south, r.east, r.north] as [number, number, number, number],
+  }));
+
+  return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------

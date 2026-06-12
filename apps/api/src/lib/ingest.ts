@@ -13,6 +13,7 @@
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
+import { getUploadsDir } from "./storage.js";
 import { eq, sql } from "drizzle-orm";
 import {
   flights,
@@ -101,6 +102,33 @@ function toIndexKind(raw: string): IndexKind {
 }
 
 // ---------------------------------------------------------------------------
+// Overlay persistence
+// ---------------------------------------------------------------------------
+
+/**
+ * copyOverlaysToDisk — copies each index PNG from the processor's temp outDir
+ * into <uploadsDir>/overlays/<flightId>/<indexKind>.png before the temp dir
+ * is cleaned up. Returns a map of indexKind → served URL path.
+ */
+async function copyOverlaysToDisk(
+  flightId: string,
+  indices: Manifest["indices"],
+): Promise<Map<string, string>> {
+  const uploadsDir = getUploadsDir();
+  const destDir = path.join(uploadsDir, "overlays", flightId);
+  await fs.mkdir(destDir, { recursive: true });
+
+  const urlMap = new Map<string, string>();
+  for (const idx of indices) {
+    const destFile = path.join(destDir, `${idx.index_kind}.png`);
+    await fs.copyFile(idx.overlay_png, destFile);
+    // Served URL path — /overlays/<flightId>/<indexKind>.png
+    urlMap.set(idx.index_kind, `/overlays/${flightId}/${idx.index_kind}.png`);
+  }
+  return urlMap;
+}
+
+// ---------------------------------------------------------------------------
 // Core transaction logic
 // ---------------------------------------------------------------------------
 
@@ -108,17 +136,19 @@ async function commitIngestResults(
   tx: DbClient,
   flightId: string,
   manifest: Manifest,
+  overlayUrls: Map<string, string>,
 ): Promise<void> {
   // Insert one raster_layers row per index in the manifest.
   for (const idx of manifest.indices) {
     const [w, s, e, n] = idx.bounds_4326;
+    // TODO(storage): real PMTiles / object-storage path.
+    // For Phase 1 we store the served overlay PNG URL as a stand-in.
+    // The column is misnamed pmtiles_path; rename once the tile pipeline exists.
+    const servedUrl = overlayUrls.get(idx.index_kind) ?? idx.overlay_png;
     await tx.insert(rasterLayers).values({
       flightId,
       indexKind: toIndexKind(idx.index_kind),
-      // TODO(storage): real PMTiles / object-storage path.
-      // For Phase 1 we store the overlay PNG path as a stand-in.
-      // The column is misnamed pmtiles_path; rename once the tile pipeline exists.
-      pmtilesPath: idx.overlay_png,
+      pmtilesPath: servedUrl,
       // Build a Polygon bbox using PostGIS ST_MakeEnvelope(w,s,e,n,4326).
       bounds: sql`ST_MakeEnvelope(${w}, ${s}, ${e}, ${n}, 4326)`,
     });
@@ -208,6 +238,9 @@ export async function processFlight(flightId: string, orthoPath: string): Promis
       outDir,
     });
 
+    // ── 4a. Persist overlay PNGs before temp dir is cleaned up ────────────
+    const overlayUrls = await copyOverlaysToDisk(flightId, manifest.indices);
+
     // ── 5. Commit everything in one transaction ───────────────────────────
     await withAudit(
       db,
@@ -223,7 +256,7 @@ export async function processFlight(flightId: string, orthoPath: string): Promis
         },
       },
       async (tx: DbClient) => {
-        await commitIngestResults(tx, flightId, manifest);
+        await commitIngestResults(tx, flightId, manifest, overlayUrls);
       },
     );
   } catch (err) {

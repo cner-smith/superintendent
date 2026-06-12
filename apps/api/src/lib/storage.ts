@@ -129,3 +129,12 @@ export function getStorage(): FlightStorage {
 export function resetStorage(): void {
   _storage = null;
 }
+
+/**
+ * getUploadsDir — returns the local uploads directory path.
+ * Used by ingest.ts to resolve where to copy overlay PNGs.
+ * Always the LocalStorage dir path (UPLOADS_DIR env or <cwd>/uploads).
+ */
+export function getUploadsDir(): string {
+  return process.env["UPLOADS_DIR"] ?? path.resolve(process.cwd(), "uploads");
+}
