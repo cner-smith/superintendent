@@ -4,7 +4,7 @@ A management platform for low-input, native-ecology golf courses. The product is
 organized as three connected realms — **Conservation**, **Management**, **Golf** —
 per the product handoff (`docs/design/`). The handoff is the **v1.0 visual + IA
 north star**; the version ladder below is how we get there, one validated vertical
-at a time. Engineering decisions trace to `docs/superpowers/specs/2026-05-28-superintendent-v0.1-design.md`.
+at a time.
 
 > Status legend: ✅ done · 🚧 in progress · ⏳ planned · 🔒 gated
 
