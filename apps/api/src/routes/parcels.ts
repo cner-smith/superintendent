@@ -1,3 +1,8 @@
+/**
+ * routes/parcels.ts — parcel-scoped reads and zone creation. Serves the map UI:
+ * list parcels, list/create a parcel's zones (drawn polygons), list its flights.
+ * Zone creation goes through withAudit() so the insert + audit row are atomic.
+ */
 import { Hono } from "hono";
 import { db } from "../lib/db.js";
 import { parcels, zones, flights } from "@superintendent/db";

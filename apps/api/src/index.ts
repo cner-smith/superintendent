@@ -1,7 +1,14 @@
+/**
+ * index.ts — API entry point. Builds the Hono app, mounts the parcels and
+ * flights routers, and exposes GET /health (which also checks DB connectivity).
+ * This process is the single writer to Postgres + Supabase Storage; all domain
+ * mutations flow through these routers and the withAudit() transaction helper.
+ */
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { logger } from "hono/logger";
 import { parcelsRouter } from "./routes/parcels.js";
+import { flightsRouter } from "./routes/flights.js";
 
 // Import db lazily so the process can start even without DATABASE_URL
 // during typecheck / unit tests. The actual connection error surfaces
@@ -38,6 +45,7 @@ app.get("/health", async (c) => {
 });
 
 app.route("/parcels", parcelsRouter);
+app.route("/flights", flightsRouter);
 
 const PORT = Number(process.env["PORT"] ?? 3001);
 
