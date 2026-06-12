@@ -54,6 +54,9 @@ importers:
       terra-draw:
         specifier: ^1.0.0
         version: 1.31.1
+      terra-draw-maplibre-gl-adapter:
+        specifier: ^1.4.1
+        version: 1.4.1(maplibre-gl@4.7.1)(terra-draw@1.31.1)
     devDependencies:
       '@types/react':
         specifier: ^18.3.3
@@ -1321,6 +1324,12 @@ packages:
   supercluster@8.0.1:
     resolution: {integrity: sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==}
 
+  terra-draw-maplibre-gl-adapter@1.4.1:
+    resolution: {integrity: sha512-qZ/bc9bVPnyt0keLVTofV8xiTPkdkbO6RzqrfNLe9zH/edW5PsjvJw97m1EksPZeXNJtFxsVbhi12cPaoNiWfg==}
+    peerDependencies:
+      maplibre-gl: '>=4'
+      terra-draw: ^1.0.0
+
   terra-draw@1.31.1:
     resolution: {integrity: sha512-cZYpFW8G0dHhkZ1yxOoOuCQ7GZJHdN7Za4yZwd6UgQuj3H7qqFxalH2bBPsGLUAtF5gQLslxhp/7r5bpscQ0IA==}
 
@@ -2334,6 +2343,11 @@ snapshots:
   supercluster@8.0.1:
     dependencies:
       kdbush: 4.1.0
+
+  terra-draw-maplibre-gl-adapter@1.4.1(maplibre-gl@4.7.1)(terra-draw@1.31.1):
+    dependencies:
+      maplibre-gl: 4.7.1
+      terra-draw: 1.31.1
 
   terra-draw@1.31.1: {}
 

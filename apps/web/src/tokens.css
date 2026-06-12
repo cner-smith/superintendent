@@ -1,0 +1,83 @@
+/*
+ * Superintendent design tokens — derived from docs/design/superintendent-handoff.html
+ * Wire these as CSS custom properties so realm theming is a single token swap.
+ *
+ * Callers: App.tsx (imports this file), MapView.tsx (via App), ZoneForm.module.css,
+ * IndexSwitcher.module.css, Toast.module.css
+ */
+
+/* ── Google Fonts + Fontshare ──────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=sentient@400,500,700&display=swap");
+
+/* ── Core palette ──────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg:        #d3e8da;
+  --panel:     #e0f0e6;
+  --card:      #eaf6ee;
+  --raise:     #c2dccb;
+
+  /* Ink */
+  --ink:       #18291f;
+  --ink-2:     #4c6c5a;
+  --ink-3:     rgba(24, 41, 31, 0.56);
+  --ink-4:     rgba(24, 41, 31, 0.34);
+
+  /* Lines */
+  --line:      rgba(24, 41, 31, 0.13);
+  --line-2:    rgba(24, 41, 31, 0.24);
+
+  /* Realm accent — conservation default; swap at runtime for other realms */
+  --accent:    #138a63;
+  --con:       #138a63;
+  --man:       #c4870f;
+  --gol:       #db4f27;
+  --green:     #2fa268;
+  --teal:      #138a63;
+  --cyan:      #1f8e9e;
+  --coral:     #db4f27;
+  --gold:      #b8881a;
+  --pink:      #cc4f72;
+
+  /* Typography */
+  --font-display: "Unbounded", "Arial Black", sans-serif;
+  --font-body:    "Sentient", Georgia, serif;
+  --font-mono:    "Space Mono", monospace;
+
+  /* Radius / spacing */
+  --radius-sm:  3px;
+  --radius-md:  6px;
+  --space-1:    4px;
+  --space-2:    8px;
+  --space-3:    12px;
+  --space-4:    16px;
+  --space-5:    24px;
+  --space-6:    32px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 4px rgba(24, 41, 31, 0.10);
+  --shadow-md:  0 4px 16px rgba(24, 41, 31, 0.14);
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  background-image:
+    radial-gradient(100% 70% at 85% -10%, rgba(19, 138, 99, 0.10), transparent 55%),
+    radial-gradient(90%  70% at  5% 105%, rgba(47, 162, 104, 0.12), transparent 55%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
