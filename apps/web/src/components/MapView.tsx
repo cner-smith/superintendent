@@ -7,7 +7,7 @@
  * Instruction: wire index overlays onto the map.
  */
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import maplibregl, { type Map as MapLibreMap, type GeoJSONSource } from "maplibre-gl";
+import maplibregl, { type Map as MapLibreMap, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { TerraDraw, TerraDrawPolygonMode, TerraDrawRenderMode } from "terra-draw";
 
@@ -25,10 +25,24 @@ const DEFAULT_CENTER: [number, number] = [-86.576, 39.269];
 const DEFAULT_ZOOM = 16;
 
 /**
- * No-API-key base map style.
- * demotiles.maplibre.org hosts a free vector tile demo style.
+ * Base map — Esri World Imagery (aerial, no API key). demotiles has no data at
+ * field zoom, so we use satellite tiles to give the index overlay real context.
  */
-const BASE_STYLE = "https://demotiles.maplibre.org/style.json";
+const BASE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    satellite: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+    },
+  },
+  layers: [{ id: "satellite-base", type: "raster", source: "satellite" }],
+};
 
 /** Parcel ID used for API calls in this v0.1 build. */
 const PARCEL_ID = "1";
