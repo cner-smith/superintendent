@@ -1,0 +1,125 @@
+/*
+ * ZoneTimeline.module.css — floating zone-trend panel (bottom-left, above map).
+ * Called by: ZoneTimeline.tsx
+ */
+
+/* ── Panel container ─────────────────────────────────────────────────────── */
+.panel {
+  position: absolute;
+  bottom: var(--space-3);
+  left: var(--space-3);
+  z-index: 100;
+  width: 264px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── Header row ──────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3) var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.zoneName {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-3);
+  padding: 0 0 0 var(--space-2);
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+.closeBtn:hover {
+  color: var(--ink);
+}
+
+/* ── Sub-label ───────────────────────────────────────────────────────────── */
+.subLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: var(--space-1) var(--space-3) 0 var(--space-3);
+}
+
+/* ── Charts area ─────────────────────────────────────────────────────────── */
+.charts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-2);
+}
+
+/* ── Single chart row ────────────────────────────────────────────────────── */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chart + .chart {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
+}
+
+.chartLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ── State messages ──────────────────────────────────────────────────────── */
+.state {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.emptyState {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-2);
+  padding: var(--space-3);
+  line-height: 1.5;
+  text-align: center;
+}

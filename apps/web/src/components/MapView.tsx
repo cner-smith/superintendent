@@ -1,10 +1,10 @@
 /**
  * MapView.tsx — MapLibre GL map with TerraDraw zone drawing, index switcher,
- * zone rendering, and raster vegetation-index overlay driven by IndexSwitcher.
+ * zone rendering, raster vegetation-index overlay, and zone-click timeseries panel.
  *
  * Called by: App.tsx
  * Data: parcels/:id/zones, parcels/:id/flights, flights/:id/layers.
- * Instruction: wire index overlays onto the map.
+ * Instruction: wire index overlays onto the map; add zone-click timeseries (issue #6).
  */
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl, { type Map as MapLibreMap, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
@@ -16,6 +16,7 @@ type FeatureId = string | number;
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import { IndexSwitcher, type VegetationIndex } from "./IndexSwitcher.js";
 import { ZoneForm, type SavedZone, type ZoneKind } from "./ZoneForm.js";
+import { ZoneTimeline } from "./ZoneTimeline.js";
 import styles from "./MapView.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -224,6 +225,9 @@ export function MapView({ onError }: MapViewProps) {
   // Track whether map + draw are ready
   const [mapReady, setMapReady] = useState(false);
 
+  // Zone selected for timeseries panel (issue #6)
+  const [selectedZone, setSelectedZone] = useState<{ id: string; name: string } | null>(null);
+
   // ── Load existing zones ────────────────────────────────────────────────
   const loadZones = useCallback(async () => {
     try {
@@ -338,6 +342,25 @@ export function MapView({ onError }: MapViewProps) {
         // Return to idle — user will confirm or cancel via ZoneForm
         draw.setMode("static");
         setIsDrawing(false);
+      });
+
+      // ── Zone click → timeseries panel (issue #6) ──────────────────────
+      map.on("click", ZONES_FILL_LAYER, (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const props = feature.properties as { id?: string; name?: string } | null;
+        const id = props?.id;
+        const name = props?.name ?? "Zone";
+        if (!id) return;
+        setSelectedZone({ id, name });
+      });
+
+      // Pointer cursor over zones
+      map.on("mouseenter", ZONES_FILL_LAYER, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", ZONES_FILL_LAYER, () => {
+        map.getCanvas().style.cursor = "";
       });
 
       setMapReady(true);
@@ -522,6 +545,15 @@ export function MapView({ onError }: MapViewProps) {
             onError?.(msg);
             handleZoneCancel();
           }}
+        />
+      )}
+
+      {/* Zone timeseries panel — bottom-left, shown when a zone is clicked (issue #6) */}
+      {selectedZone !== null && (
+        <ZoneTimeline
+          parcelId={PARCEL_ID}
+          zone={selectedZone}
+          onClose={() => setSelectedZone(null)}
         />
       )}
     </div>

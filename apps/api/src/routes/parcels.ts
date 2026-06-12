@@ -4,11 +4,12 @@
  * Zones cross the wire as GeoJSON strings — ST_AsGeoJSON on read, ST_GeomFromGeoJSON
  * on write. v0.1 is single-parcel, so a non-UUID :id (the frontend placeholder)
  * resolves to the first parcel. Zone creation runs through withAudit().
+ * Also serves GET /parcels/:id/zones/:zoneId/timeseries for issue #6.
  */
 import { Hono } from "hono";
 import { db } from "../lib/db.js";
-import { parcels, zones, flights } from "@superintendent/db";
-import { eq, sql } from "drizzle-orm";
+import { parcels, zones, flights, zoneIndexAggregates } from "@superintendent/db";
+import { eq, sql, asc } from "drizzle-orm";
 import { withAudit } from "../lib/audit.js";
 import { createFlightHandler } from "./flights.js";
 
@@ -18,7 +19,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Map a route :id to a real parcel UUID; non-UUID falls back to the sole v0.1 parcel. */
-async function resolveParcelId(id: string): Promise<string | null> {
+export async function resolveParcelId(id: string): Promise<string | null> {
   if (UUID_RE.test(id)) return id;
   const [first] = await db
     .select({ id: parcels.id })
@@ -103,6 +104,64 @@ parcelsRouter.get("/:id/flights", async (c) => {
     .from(flights)
     .where(eq(flights.parcelId, parcelId));
   return c.json({ data: rows });
+});
+
+/**
+ * GET /parcels/:id/zones/:zoneId/timeseries
+ * Returns vegetation-index trend data for a zone across all flights.
+ * Joins zone_index_aggregates with flights for capturedAt, ordered ascending.
+ * Response grouped by index kind for easy charting:
+ *   { "data": { "vari": [{ flightId, capturedAt, mean, min, max, stddev }], … } }
+ * Empty { "data": {} } when the zone has no aggregates yet.
+ */
+parcelsRouter.get("/:id/zones/:zoneId/timeseries", async (c) => {
+  const parcelId = await resolveParcelId(c.req.param("id"));
+  if (!parcelId) return c.json({ data: {} });
+
+  const zoneId = c.req.param("zoneId");
+
+  const rows = await db
+    .select({
+      flightId: zoneIndexAggregates.flightId,
+      capturedAt: flights.capturedAt,
+      indexKind: zoneIndexAggregates.indexKind,
+      mean: zoneIndexAggregates.mean,
+      min: zoneIndexAggregates.min,
+      max: zoneIndexAggregates.max,
+      stddev: zoneIndexAggregates.stddev,
+    })
+    .from(zoneIndexAggregates)
+    .innerJoin(flights, eq(zoneIndexAggregates.flightId, flights.id))
+    .where(eq(zoneIndexAggregates.zoneId, zoneId))
+    .orderBy(asc(flights.capturedAt));
+
+  type IndexKind = "vari" | "gli" | "exg";
+  type TimeseriesPoint = {
+    flightId: string;
+    capturedAt: string;
+    mean: number;
+    min: number;
+    max: number;
+    stddev: number;
+  };
+
+  const grouped: Partial<Record<IndexKind, TimeseriesPoint[]>> = {};
+  for (const row of rows) {
+    // indexKind enum includes "ortho" — skip it, it carries no aggregate stats
+    if (row.indexKind === "ortho") continue;
+    const kind = row.indexKind as IndexKind;
+    if (!grouped[kind]) grouped[kind] = [];
+    grouped[kind]!.push({
+      flightId: row.flightId,
+      capturedAt: row.capturedAt.toISOString(),
+      mean: row.mean,
+      min: row.min,
+      max: row.max,
+      stddev: row.stddev,
+    });
+  }
+
+  return c.json({ data: grouped });
 });
 
 /**
