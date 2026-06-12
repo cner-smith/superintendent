@@ -212,7 +212,9 @@ export async function processFlight(flightId: string, orthoPath: string): Promis
       id: zones.id,
       name: zones.name,
       kind: zones.kind,
-      geom: zones.geom,
+      // ST_AsGeoJSON so the processor receives parseable GeoJSON geometry,
+      // not the raw EWKB the geom customType returns.
+      geom: sql<string>`ST_AsGeoJSON(${zones.geom})`,
     })
     .from(zones)
     .where(eq(zones.parcelId, flight.parcelId));
