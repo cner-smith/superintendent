@@ -1,10 +1,12 @@
 /**
  * MapView.tsx — MapLibre GL map with TerraDraw zone drawing, index switcher,
- * zone rendering, raster vegetation-index overlay, and zone-click timeseries panel.
+ * zone rendering, raster vegetation-index overlay, zone-click timeseries panel,
+ * and live sensor-node markers from the Phoenix sensor_service (v0.3).
  *
  * Called by: App.tsx
  * Data: parcels/:id/zones, parcels/:id/flights, flights/:id/layers.
- * Instruction: wire index overlays onto the map; add zone-click timeseries (issue #6).
+ * Instruction: wire index overlays onto the map; add zone-click timeseries (issue #6);
+ *              add live Sensor Mesh UI (v0.3).
  */
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl, { type Map as MapLibreMap, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
@@ -18,6 +20,8 @@ import { IndexSwitcher, type VegetationIndex } from "./IndexSwitcher.js";
 import { IndexLegend } from "./IndexLegend.js";
 import { ZoneForm, type SavedZone, type ZoneKind } from "./ZoneForm.js";
 import { ZoneTimeline } from "./ZoneTimeline.js";
+import { SensorPanel } from "./SensorPanel.js";
+import { useSensorChannel, type SensorNode } from "../hooks/useSensorChannel.js";
 import styles from "./MapView.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -57,6 +61,25 @@ const ZONES_OUTLINE_LAYER = "superintendent-zones-outline";
 /** MapLibre source/layer IDs for the raster index overlay (stub). */
 const OVERLAY_SOURCE = "superintendent-overlay";
 const OVERLAY_LAYER = "superintendent-overlay-layer";
+
+/** MapLibre source/layer IDs for the sensor-node circle markers. */
+const SENSORS_SOURCE = "superintendent-sensors";
+const SENSORS_LAYER = "superintendent-sensors-layer";
+const SENSORS_LABEL_LAYER = "superintendent-sensors-labels";
+
+/**
+ * Moisture color ramp for the "0-4in" depth band.
+ * Interpolates tan (dry) → teal/blue (wet) across 15–65 VWC %.
+ * Used as a MapLibre expression so the map GPU handles interpolation.
+ */
+const MOISTURE_COLOR_EXPR = [
+  "interpolate",
+  ["linear"],
+  ["get", "moisture"],
+  15, "#b8881a",  // dry  → gold/tan
+  35, "#4c9e8a",  // mid  → teal-green
+  65, "#1f8e9e",  // wet  → cyan/teal
+] as const;
 
 // ── Zone kind colours (fill) ──────────────────────────────────────────────
 
@@ -132,6 +155,21 @@ const INDEX_KIND_MAP: Record<string, VegetationIndex> = {
   gli:  "GLI",
   exg:  "ExG",
 };
+
+/**
+ * Fetch the real parcel UUID from the API (first entry).
+ * Returns null if the request fails — the sensor hook skips connecting when falsy.
+ */
+async function fetchParcelUuid(): Promise<string | null> {
+  try {
+    const res = await fetch("/api/parcels");
+    if (!res.ok) return null;
+    const json = (await res.json()) as { data: Array<{ id: string }> };
+    return json.data[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Fetch the most-recent ready flight for the parcel, then its overlay layers.
@@ -229,6 +267,19 @@ export function MapView({ onError }: MapViewProps) {
   // Zone selected for timeseries panel (issue #6)
   const [selectedZone, setSelectedZone] = useState<{ id: string; name: string } | null>(null);
 
+  // ── Sensor Mesh state (v0.3) ───────────────────────────────────────────
+  /** Whether the Sensors toggle is on */
+  const [sensorsOn, setSensorsOn] = useState(false);
+  /** Real parcel UUID (fetched from API; distinct from the numeric PARCEL_ID) */
+  const [parcelUuid, setParcelUuid] = useState("");
+  /** Node clicked in the map → drives SensorPanel */
+  const [selectedNode, setSelectedNode] = useState<SensorNode | null>(null);
+
+  // Connect to sensor channel only when toggle is on and we have a real parcel UUID.
+  // When sensorsOn=false we pass "" so the hook skips connecting (early return on falsy).
+  const { connected: sensorConnected, nodes: sensorNodes, readings: sensorReadings } =
+    useSensorChannel(sensorsOn ? parcelUuid : "");
+
   // ── Load existing zones ────────────────────────────────────────────────
   const loadZones = useCallback(async () => {
     try {
@@ -241,6 +292,13 @@ export function MapView({ onError }: MapViewProps) {
       onError?.(`Could not load zones — ${msg}`);
     }
   }, [onError]);
+
+  // ── Fetch real parcel UUID once (for sensor channel) ──────────────────
+  useEffect(() => {
+    void fetchParcelUuid().then((uuid) => {
+      if (uuid) setParcelUuid(uuid);
+    });
+  }, []);
 
   // ── Load overlay layers for the most-recent ready flight ──────────────
   const loadLayers = useCallback(async () => {
@@ -364,6 +422,39 @@ export function MapView({ onError }: MapViewProps) {
         map.getCanvas().style.cursor = "";
       });
 
+      // Sensor node clicks — handled via event listener added after source exists
+      map.on("click", SENSORS_LAYER, (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const props = feature.properties as {
+          id?: number;
+          label?: string;
+          lat?: number;
+          lng?: number;
+          depth_bands?: string;
+        } | null;
+        if (!props?.id) return;
+        const node: SensorNode = {
+          id: props.id,
+          label: props.label ?? String(props.id),
+          lat: props.lat ?? 0,
+          lng: props.lng ?? 0,
+          // depth_bands is serialized as JSON string in GeoJSON properties
+          depth_bands: (() => {
+            try { return JSON.parse(props.depth_bands ?? "[]") as string[]; }
+            catch { return []; }
+          })(),
+        };
+        setSelectedNode(node);
+      });
+
+      map.on("mouseenter", SENSORS_LAYER, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", SENSORS_LAYER, () => {
+        map.getCanvas().style.cursor = "";
+      });
+
       setMapReady(true);
       void loadZones();
       void loadLayers();
@@ -456,6 +547,82 @@ export function MapView({ onError }: MapViewProps) {
     }
   }, [activeIndex, overlayOpacity, layersByIndex, mapReady]);
 
+  // ── Sync sensor nodes → map layer (add/remove + live GeoJSON updates) ─
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (!sensorsOn) {
+      // Remove sensor layers + source when toggle is off
+      if (map.getLayer(SENSORS_LABEL_LAYER)) map.removeLayer(SENSORS_LABEL_LAYER);
+      if (map.getLayer(SENSORS_LAYER)) map.removeLayer(SENSORS_LAYER);
+      if (map.getSource(SENSORS_SOURCE)) map.removeSource(SENSORS_SOURCE);
+      return;
+    }
+
+    // Build GeoJSON from current nodes, embedding per-node moisture for the color ramp
+    const features: GeoJSON.Feature[] = sensorNodes.map((node) => {
+      const nodeReadings = sensorReadings[String(node.id)] ?? {};
+      const band0 = nodeReadings["0-4in"];
+      const moisture = band0?.value ?? 35; // default to midpoint if no data yet
+      return {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [node.lng, node.lat] },
+        properties: {
+          id: node.id,
+          label: node.label,
+          lat: node.lat,
+          lng: node.lng,
+          depth_bands: JSON.stringify(node.depth_bands),
+          moisture,
+        },
+      };
+    });
+
+    const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+
+    if (map.getSource(SENSORS_SOURCE)) {
+      // Update existing source data in place
+      (map.getSource(SENSORS_SOURCE) as GeoJSONSource).setData(fc);
+    } else {
+      // Add source + layers for the first time
+      map.addSource(SENSORS_SOURCE, { type: "geojson", data: fc });
+
+      // Circle markers colored by "0-4in" moisture
+      map.addLayer({
+        id: SENSORS_LAYER,
+        type: "circle",
+        source: SENSORS_SOURCE,
+        paint: {
+          "circle-radius": 9,
+          "circle-color": MOISTURE_COLOR_EXPR as unknown as string,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#eaf6ee",
+          "circle-opacity": 0.92,
+        },
+      });
+
+      // Node label below the dot
+      map.addLayer({
+        id: SENSORS_LABEL_LAYER,
+        type: "symbol",
+        source: SENSORS_SOURCE,
+        layout: {
+          "text-field": ["get", "label"],
+          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+          "text-size": 9,
+          "text-offset": [0, 1.4],
+          "text-anchor": "top",
+        },
+        paint: {
+          "text-color": "#18291f",
+          "text-halo-color": "#eaf6ee",
+          "text-halo-width": 1.5,
+        },
+      });
+    }
+  }, [sensorsOn, sensorNodes, sensorReadings, mapReady]);
+
   // ── Draw toggle ────────────────────────────────────────────────────────
   const handleDrawToggle = useCallback(() => {
     const draw = drawRef.current;
@@ -516,6 +683,30 @@ export function MapView({ onError }: MapViewProps) {
           {isDrawing ? "Drawing…" : "Draw zone"}
         </button>
 
+        <button
+          className={`${styles.drawBtn}${sensorsOn ? ` ${styles.active}` : ""}`}
+          onClick={() => {
+            setSensorsOn((prev) => {
+              // Close panel when turning off
+              if (prev) setSelectedNode(null);
+              return !prev;
+            });
+          }}
+          type="button"
+          aria-pressed={sensorsOn}
+          title={sensorsOn ? "Hide sensor nodes" : "Show soil-moisture sensor nodes"}
+        >
+          <span className={styles.drawDot} />
+          Sensors
+        </button>
+
+        {/* Offline pill — shown when sensors are on but service is unreachable */}
+        {sensorsOn && !sensorConnected && (
+          <div className={styles.sensorOfflinePill}>
+            Sensor service offline — start the Phoenix service
+          </div>
+        )}
+
         <div className={styles.legend} aria-label="Zone type legend">
           <div className={styles.legendTitle}>Zone types</div>
           <div className={styles.legendItems}>
@@ -573,6 +764,16 @@ export function MapView({ onError }: MapViewProps) {
           parcelId={PARCEL_ID}
           zone={selectedZone}
           onClose={() => setSelectedZone(null)}
+        />
+      )}
+
+      {/* Sensor live-reading panel — bottom-right, shown when a node marker is clicked */}
+      {sensorsOn && selectedNode !== null && (
+        <SensorPanel
+          node={selectedNode}
+          readings={sensorReadings}
+          connected={sensorConnected}
+          onClose={() => setSelectedNode(null)}
         />
       )}
     </div>

@@ -34,5 +34,21 @@ echo "▸ seeding demo parcel if empty…"
 docker compose exec -T db psql -U superintendent -d superintendent -tAc \
   "INSERT INTO parcels (name, centroid) SELECT 'Pine Hollow Garden', ST_GeogFromText('SRID=4326;POINT(-86.576 39.269)') WHERE NOT EXISTS (SELECT 1 FROM parcels);" >/dev/null
 
-echo "▸ ready — starting api (:3001) + web (http://localhost:5173)…"
-exec pnpm dev
+# ── Phoenix sensor service (realtime telemetry, :4000) ──────────────────────
+# Started in the background; the simulated publisher seeds ~10 nodes for the
+# parcel and streams readings over a WebSocket channel the web app subscribes
+# to. If it fails to start, the web app degrades gracefully ("sensor offline").
+MISE="$HOME/.local/share/mise/installs"
+echo "▸ starting Phoenix sensor service (:4000)…"
+(
+  cd sensor_service
+  export PATH="$MISE/elixir/1.17.3/bin:$MISE/erlang/27.2/bin:$MISE/elixir/1.17.3/.mix/escripts:$PATH"
+  mix deps.get --quiet >/dev/null 2>&1 || true
+  mix ecto.migrate --quiet >/dev/null 2>&1 || true
+  exec mix phx.server
+) &
+# Tear the sensor service down when this script exits (Ctrl+C on pnpm dev).
+trap 'pkill -f "mix phx.server" 2>/dev/null || true' EXIT INT TERM
+
+echo "▸ ready — api (:3001) · web (http://localhost:5173) · sensors (:4000)"
+pnpm dev

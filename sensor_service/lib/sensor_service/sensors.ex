@@ -28,10 +28,14 @@ defmodule SensorService.Sensors do
   def list_nodes, do: Repo.all(SensorNode)
 
   @doc "List nodes for a given parcel_id (binary UUID string)."
-  @spec nodes_for_parcel(String.t()) :: [SensorNode.t()]
-  def nodes_for_parcel(parcel_id) do
-    Repo.all(from n in SensorNode, where: n.parcel_id == ^parcel_id)
+  @spec list_nodes(String.t()) :: [SensorNode.t()]
+  def list_nodes(parcel_id) do
+    Repo.all(from n in SensorNode, where: n.parcel_id == ^parcel_id, order_by: n.label)
   end
+
+  @doc "List nodes for a given parcel_id (binary UUID string). Alias kept for backward compat."
+  @spec nodes_for_parcel(String.t()) :: [SensorNode.t()]
+  def nodes_for_parcel(parcel_id), do: list_nodes(parcel_id)
 
   # ---------------------------------------------------------------------------
   # Readings
@@ -76,6 +80,48 @@ defmodule SensorService.Sensors do
         order_by: [desc: r.at],
         limit: ^limit
     )
+  end
+
+  @doc """
+  Return the latest reading per node+depth_band for all nodes in a parcel.
+
+  Uses a lateral-style subquery via a window function to fetch the single most
+  recent row for each (node_id, depth_band) pair efficiently.
+  """
+  @spec latest_readings(String.t()) :: [map()]
+  def latest_readings(parcel_id) do
+    node_ids =
+      Repo.all(from n in SensorNode, where: n.parcel_id == ^parcel_id, select: n.id)
+
+    if node_ids == [] do
+      []
+    else
+      ranked =
+        from r in SensorReading,
+          where: r.node_id in ^node_ids,
+          select: %{
+            node_id: r.node_id,
+            depth_band: r.depth_band,
+            value: r.value,
+            at: r.at,
+            rn:
+              over(
+                row_number(),
+                partition_by: [r.node_id, r.depth_band],
+                order_by: [desc: r.at]
+              )
+          }
+
+      Repo.all(from r in subquery(ranked), where: r.rn == 1)
+      |> Enum.map(fn row ->
+        %{
+          node_id: row.node_id,
+          depth_band: row.depth_band,
+          value: row.value,
+          at: DateTime.to_iso8601(row.at)
+        }
+      end)
+    end
   end
 
   # ---------------------------------------------------------------------------
