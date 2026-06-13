@@ -18,18 +18,31 @@ at a time.
 
 | Version | Theme | Delivers | Realm / handoff tiles | Status |
 |---|---|---|---|---|
-| **v0.1** | RGB vegetation indices | Drone ortho upload → VARI/GLI/ExG → zones → per-zone aggregates + time-series | Conservation: Drone Routes (core) | 🚧 |
-| **v0.2** | Multispectral + Rust | NDVI when NIR hardware acquired; `super-raster` Rust binary replaces GDAL CLI | Conservation: Drone Routes | ⏳ |
-| **v0.3** | Realtime sensors | Phoenix/Elixir MQTT sensor telemetry + realtime dashboards | Conservation: Sensor Mesh, Water | ⏳ |
+| **v0.1** | RGB vegetation indices | Drone ortho upload → VARI/GLI/ExG → zones → per-zone aggregates + time-series | Conservation: Drone Routes (core) | ✅ |
+| **v0.2** | Multispectral + Rust | `super-raster` Rust binary (done, live w/ Python fallback); NDVI when NIR hardware acquired | Conservation: Drone Routes | 🚧 Rust done · NDVI hardware-gated |
+| **v0.3** | Realtime sensors | Phoenix/Elixir MQTT sensor telemetry + realtime dashboards | Conservation: Sensor Mesh, Water | 🚧 |
 | **v0.4** | Phenology scheduling | GDD/ET-driven scheduling for OK zone 7a native grasses | Conservation: Mowing, Sod Farm, Weather | ⏳ |
 | **v0.5** | Business operations | Tee-time booking, POS / pro shop, finance | Golf + Management: Tee Sheet, Pro Shop, Finance | ⏳ |
 | **v0.6** | Compliance exports | USDA NRCS / CRP / Audubon export with no re-keying | Conservation: Research Hub · Management: Suppliers | ⏳ |
 | **v0.7** | Irrigation automation | Supervised, sensor-driven irrigation control | Conservation: Water Systems | ⏳ |
 | **v1.0** | Multi-tenant | Onboarding for the first non-author course | All realms | ⏳ |
 
-## v0.1 — current focus
+## v0.3 — current focus
 
-**Goal:** a single-user web app where you upload a drone orthomosaic, draw zones on a
+Realtime sensor mesh: a Phoenix/Elixir service ingests MQTT soil-moisture
+telemetry and fans it out over WebSocket to a live dashboard. Phoenix joins the
+stack here (the runtime session 1 reserved for v0.3) alongside the existing
+Hono/TS API; it owns the sensor domain in the shared Postgres. Tracked in the
+v0.3 GitHub milestone (sensor model → MQTT ingest → realtime channel → Sensor
+Mesh UI). Build-spike first: prove ingest → channel → live UI before widening.
+
+## v0.1 — shipped ✅
+
+Single-user web app: upload a drone orthomosaic, draw zones on a map, see RGB
+vegetation-index overlays with per-zone statistics over time. All Phase-1 issues
+closed; the index processor runs on Rust (super-raster) with a Python fallback.
+
+**Original goal:** a single-user web app where you upload a drone orthomosaic, draw zones on a
 map, and see RGB vegetation-index overlays with per-zone statistics over time.
 
 **Phase 1 (GDAL CLI):** full vertical slice — upload → GDAL index computation → tiles
