@@ -21,7 +21,13 @@ config :sensor_service, SensorServiceWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
-  check_origin: false,
+  # Allow the Vite dev server (5173) and CRA/other local origins (3000)
+  # to perform the WebSocket upgrade handshake without an origin error.
+  check_origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:4000"
+  ],
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "SUTs6vJyGj3ELfRA8oCD56UpVKXZgBN0fY2yC/r4zD1UFJLaJFXB/MAo3wGP9pJd",
