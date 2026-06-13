@@ -10,6 +10,8 @@
  * User instruction: wire index overlays onto the map.
  */
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
+import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
@@ -18,6 +20,7 @@ import { db } from "../lib/db.js";
 import { withAudit } from "../lib/audit.js";
 import { processFlight } from "../lib/ingest.js";
 import { getStorage, getUploadsDir } from "../lib/storage.js";
+import { isUuid } from "../lib/ids.js";
 import { resolveParcelId } from "./parcels.js";
 
 export const flightsRouter = new Hono();
@@ -28,20 +31,26 @@ export const flightsRouter = new Hono();
 // Exported separately for mounting; flightsRouter owns /flights/* below.
 // ---------------------------------------------------------------------------
 
+const createFlightBodySchema = z.object({
+  capturedAt: z.string().check(z.iso.datetime()),
+  notes: z.string().max(2000).optional(),
+});
+
 export const createFlightHandler = new Hono<{ Variables: Record<string, never> }>();
 
 createFlightHandler.post("/", async (c) => {
   // Resolve the route id (the frontend's v0.1 placeholder "1" → the real parcel).
   const parcelId = await resolveParcelId(c.req.param("id") ?? "");
-  const body = await c.req.json<{ capturedAt: string; notes?: string }>();
 
   if (!parcelId) {
     return c.json({ error: "no parcel for id" }, 404);
   }
 
-  if (!body.capturedAt || typeof body.capturedAt !== "string") {
-    return c.json({ error: "capturedAt (ISO string) is required" }, 400);
+  const parsed = createFlightBodySchema.safeParse(await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message ?? "invalid body" }, 400);
   }
+  const body = parsed.data;
 
   const actor = c.req.header("x-actor") ?? "anonymous";
 
@@ -79,8 +88,19 @@ createFlightHandler.post("/", async (c) => {
 // POST /flights/:id/ortho  — multipart ortho upload → fire-and-forget ingest
 // ---------------------------------------------------------------------------
 
-flightsRouter.post("/:id/ortho", async (c) => {
+// 2 GiB cap; returns 413 before the body is buffered beyond this size.
+const TWO_GIB = 2 * 1024 * 1024 * 1024;
+
+flightsRouter.post(
+  "/:id/ortho",
+  bodyLimit({ maxSize: TWO_GIB }),
+  async (c) => {
   const flightId = c.req.param("id");
+
+  if (!isUuid(flightId)) {
+    return c.json({ error: "invalid flight id" }, 400);
+  }
+
   const actor = c.req.header("x-actor") ?? "anonymous";
 
   // TODO(stream): stream large orthos to storage instead of buffering.
@@ -150,6 +170,27 @@ flightsRouter.post("/:id/ortho", async (c) => {
     })
     .catch((pathErr: unknown) => {
       console.error(`[flights] getLocalPath(${storageKey}) failed:`, pathErr);
+      // Mark failed so the flight isn't stuck in 'ingest' forever.
+      withAudit(
+        db,
+        {
+          actor,
+          action: "ingest_dispatch_failed",
+          entity: "flight",
+          entityId: flightId,
+          detail: {
+            error: pathErr instanceof Error ? pathErr.message : String(pathErr),
+          },
+        },
+        async (tx) => {
+          await tx
+            .update(flights)
+            .set({ status: "failed" })
+            .where(eq(flights.id, flightId));
+        },
+      ).catch((auditErr: unknown) => {
+        console.error(`[flights] failed to write dispatch-failure audit:`, auditErr);
+      });
     });
 
   return c.json({ flightId, status: "ingest" }, 202);
@@ -161,6 +202,10 @@ flightsRouter.post("/:id/ortho", async (c) => {
 
 flightsRouter.get("/:id", async (c) => {
   const flightId = c.req.param("id");
+
+  if (!isUuid(flightId)) {
+    return c.json({ error: "invalid flight id" }, 400);
+  }
 
   const [row] = await db
     .select()
@@ -184,6 +229,10 @@ flightsRouter.get("/:id", async (c) => {
 
 flightsRouter.get("/:id/layers", async (c) => {
   const flightId = c.req.param("id");
+
+  if (!isUuid(flightId)) {
+    return c.json({ error: "invalid flight id" }, 400);
+  }
 
   const rows = await db
     .select({
@@ -214,7 +263,17 @@ flightsRouter.get("/:id/layers", async (c) => {
 // ---------------------------------------------------------------------------
 
 flightsRouter.post("/:id/process", async (c) => {
+  // Dev/test only — orthoPath allows arbitrary local-file reads; block in production.
+  if (process.env["NODE_ENV"] === "production") {
+    return c.json({}, 404);
+  }
+
   const flightId = c.req.param("id");
+
+  if (!isUuid(flightId)) {
+    return c.json({ error: "invalid flight id" }, 400);
+  }
+
   const body = await c.req.json<{ orthoPath: string }>();
   const orthoPath: string = body.orthoPath;
 
