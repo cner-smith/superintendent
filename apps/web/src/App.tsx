@@ -21,6 +21,9 @@ export default function App() {
         <div className={appStyles.headerText}>
           <div className={appStyles.headerKick}>Conservation · Drone Monitoring</div>
           <h1 className={appStyles.headerTitle}>Superintendent</h1>
+          <div className={appStyles.headerExplainer}>
+            Draw zones on your land, upload a drone flight, and track vegetation health across each zone over time.
+          </div>
         </div>
       </header>
 

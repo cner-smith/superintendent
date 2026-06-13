@@ -15,6 +15,7 @@ import { TerraDraw, TerraDrawPolygonMode, TerraDrawRenderMode } from "terra-draw
 type FeatureId = string | number;
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import { IndexSwitcher, type VegetationIndex } from "./IndexSwitcher.js";
+import { IndexLegend } from "./IndexLegend.js";
 import { ZoneForm, type SavedZone, type ZoneKind } from "./ZoneForm.js";
 import { ZoneTimeline } from "./ZoneTimeline.js";
 import styles from "./MapView.module.css";
@@ -404,6 +405,13 @@ export function MapView({ onError }: MapViewProps) {
 
     const layer = activeIndex !== "Ortho" ? layersByIndex[activeIndex] : undefined;
 
+    // Dim zone fills when a heatmap overlay is active so it shows through;
+    // restore full fill in Ortho mode or when no overlay data exists.
+    const zoneFillOpacity = layer ? 0.05 : 1;
+    if (map.getLayer(ZONES_FILL_LAYER)) {
+      map.setPaintProperty(ZONES_FILL_LAYER, "fill-opacity", zoneFillOpacity);
+    }
+
     if (!layer) {
       // No overlay: remove source+layer if present
       if (map.getLayer(OVERLAY_LAYER)) map.removeLayer(OVERLAY_LAYER);
@@ -508,14 +516,17 @@ export function MapView({ onError }: MapViewProps) {
           {isDrawing ? "Drawing…" : "Draw zone"}
         </button>
 
-        <div className={styles.legend} aria-label="Zone kind legend">
-          <div className={styles.legendTitle}>Zones</div>
+        <div className={styles.legend} aria-label="Zone type legend">
+          <div className={styles.legendTitle}>Zone types</div>
           <div className={styles.legendItems}>
             {LEGEND_ENTRIES.map(({ kind, label }) => (
               <div key={kind} className={styles.legendItem}>
                 <span
                   className={styles.legendSwatch}
-                  style={{ background: KIND_FILL[kind], outline: `1.5px solid ${KIND_STROKE[kind]}` }}
+                  style={{
+                    background: "transparent",
+                    border: `2px solid ${KIND_STROKE[kind]}`,
+                  }}
                 />
                 {label}
               </div>
@@ -524,7 +535,7 @@ export function MapView({ onError }: MapViewProps) {
         </div>
       </div>
 
-      {/* Top-right controls: index switcher */}
+      {/* Top-right controls: index switcher + index legend */}
       <div className={styles.controlsTopRight}>
         <IndexSwitcher
           activeIndex={activeIndex}
@@ -532,6 +543,14 @@ export function MapView({ onError }: MapViewProps) {
           onIndexChange={setActiveIndex}
           onOpacityChange={setOverlayOpacity}
         />
+        {activeIndex !== "Ortho" && layersByIndex[activeIndex] !== undefined && (
+          <IndexLegend activeIndex={activeIndex} />
+        )}
+        {activeIndex !== "Ortho" && layersByIndex[activeIndex] === undefined && (
+          <div className={styles.noFlightHint}>
+            No flight data yet — upload a drone flight to see this index.
+          </div>
+        )}
       </div>
 
       {/* Zone name/kind modal — shown after terra-draw finishes a polygon */}
