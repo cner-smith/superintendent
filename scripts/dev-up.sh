@@ -9,8 +9,8 @@ cd "$(dirname "$0")/.."
 export DATABASE_URL="postgres://superintendent:superintendent@127.0.0.1:54329/superintendent"
 export PORT=3001
 
-echo "▸ starting database…"
-docker compose up -d db
+echo "▸ starting database + MQTT broker…"
+docker compose up -d db mqtt
 # Wait until the superintendent DB is actually queryable — pg_isready can pass
 # before first-time init finishes creating POSTGRES_DB.
 until docker compose exec -T db psql -U superintendent -d superintendent -tAc 'select 1' >/dev/null 2>&1; do

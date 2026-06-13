@@ -1,21 +1,19 @@
 defmodule SensorService.Sensors.SimulatedPublisher do
   @moduledoc """
-  GenServer that simulates an MQTT soil-moisture feed.
+  GenServer that simulates an MQTT soil-moisture sensor feed.
 
   Every ~2 seconds it generates a plausible soil-moisture reading for each
-  seeded sensor node, inserts it via `SensorService.Sensors.insert_reading/1`,
-  and lets PubSub fan-out handle the channel broadcast.
+  seeded sensor node and **publishes it to the MQTT broker** via
+  `SensorService.MQTT.PublisherClient`. The broker then delivers the message
+  to the `SensorService.MQTT.Subscriber`, which calls `insert_reading/1` —
+  the single point of persistence and PubSub broadcast.
 
-  On first start (empty sensor_nodes table) it queries the shared parcels table
-  for the first parcel and seeds 10 nodes spread around the demo ortho footprint
-  near lat 39.269, lng -86.576 (± ~0.0015°).  If no parcel exists yet, seeding
-  is skipped gracefully and re-attempted on each subsequent tick until nodes
-  are present.
+  On first start (empty sensor_nodes table) the publisher queries the shared
+  parcels table for the first parcel and seeds 10 nodes spread across the demo
+  ortho footprint near lat 39.269, lng -86.576 (± ~0.0015°). If no parcel
+  exists yet, seeding is skipped and re-attempted on each subsequent tick.
 
-  This stands in for a real MQTT broker adapter (tracked as a future issue).
-  Replace this module with an `emqtt`/`tortoise` client when the broker arrives.
-
-  The publisher is supervised under `SensorService.Application`.
+  Supervised under `SensorService.Application` (not started in `:test` env).
   """
 
   use GenServer
@@ -23,12 +21,12 @@ defmodule SensorService.Sensors.SimulatedPublisher do
 
   alias SensorService.Repo
   alias SensorService.Sensors
+  alias SensorService.MQTT.PublisherClient
 
   @interval_ms 2_000
   @depth_bands ["0-4in", "4-8in", "8-12in"]
 
   # Offsets (Δlat, Δlng) in degrees, spread across the ortho footprint.
-  # Base position: 39.269, -86.576  ± ~0.0015°
   @node_offsets [
     {0.0000, 0.0000},
     {0.0010, 0.0005},
@@ -55,7 +53,7 @@ defmodule SensorService.Sensors.SimulatedPublisher do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  @doc "Trigger one publish cycle immediately (used in tests)."
+  @doc "Trigger one publish cycle immediately (useful for smoke tests)."
   @spec publish_now() :: :ok
   def publish_now do
     GenServer.call(__MODULE__, :publish_now)
@@ -74,7 +72,6 @@ defmodule SensorService.Sensors.SimulatedPublisher do
 
   @impl true
   def handle_info(:tick, %{nodes: nodes} = state) do
-    # If seeding was skipped (no parcel existed), retry each tick.
     nodes = if nodes == [], do: ensure_seed_nodes(), else: nodes
     emit_readings(nodes)
     schedule_tick()
@@ -113,11 +110,9 @@ defmodule SensorService.Sensors.SimulatedPublisher do
     end
   end
 
-  # Queries the shared parcels table (owned by the TS side) read-only.
   defp fetch_first_parcel_id do
     case Repo.query("SELECT id FROM parcels ORDER BY created_at LIMIT 1") do
       {:ok, %{rows: [[id | _] | _]}} ->
-        # id may come back as a binary UUID string or Postgrex.Extensions.UUID
         to_string(id)
 
       {:ok, %{rows: []}} ->
@@ -157,22 +152,21 @@ defmodule SensorService.Sensors.SimulatedPublisher do
     |> Enum.reject(&is_nil/1)
   end
 
+  # Publishes one reading per node×band to the MQTT broker via PublisherClient.
+  # The broker delivers it back to the Subscriber, which calls insert_reading/1.
   defp emit_readings(nodes) do
     for node <- nodes, depth_band <- @depth_bands do
-      attrs = %{
-        node_id: node.id,
-        at: DateTime.utc_now(),
-        depth_band: depth_band,
-        # Soil moisture 15–65 % VWC — plausible for irrigated ag.
-        value: Float.round(15.0 + :rand.uniform() * 50.0, 2)
-      }
+      value = Float.round(15.0 + :rand.uniform() * 50.0, 2)
+      at = DateTime.utc_now()
 
-      case Sensors.insert_reading(attrs) do
-        {:ok, _reading} ->
+      case PublisherClient.publish(node.id, depth_band, value, at) do
+        :ok ->
           :ok
 
-        {:error, cs} ->
-          Logger.warning("SimulatedPublisher: insert_reading failed: #{inspect(cs.errors)}")
+        {:error, reason} ->
+          Logger.warning(
+            "SimulatedPublisher: publish failed for node #{node.id}/#{depth_band}: #{inspect(reason)}"
+          )
       end
     end
   end
