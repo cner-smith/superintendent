@@ -1,0 +1,65 @@
+/*
+ * IndexLegend.module.css — colorbar legend for vegetation-index overlays.
+ * Called by: IndexLegend.tsx
+ * Instruction: polish the map UX.
+ */
+
+.panel {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--ink);
+  border: 1px solid var(--ink-2);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  min-width: 148px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.indexName {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.meaning {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: rgba(211, 232, 218, 0.55);
+  text-transform: lowercase;
+}
+
+/* Red → yellow → green — matches the VARI/GLI/ExG heatmap colormap */
+.gradientBar {
+  height: 8px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #c0392b,
+    #e67e22,
+    #f1c40f,
+    #2ecc71,
+    #27ae60
+  );
+}
+
+.endLabels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  color: rgba(211, 232, 218, 0.55);
+  line-height: 1.2;
+}
