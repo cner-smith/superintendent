@@ -58,32 +58,28 @@ interface ZoneRow {
   geom: string;
 }
 
+/** Throw a descriptive error rather than silently producing zero aggregates. */
+function parseZoneGeom(z: ZoneRow): ZoneFeature["geometry"] {
+  try {
+    return JSON.parse(z.geom) as ZoneFeature["geometry"];
+  } catch {
+    throw new Error(`Zone ${z.id} has unparseable geom`);
+  }
+}
+
 function buildZonesGeoJson(zoneRows: ZoneRow[]): ZonesFeatureCollection {
   return {
     type: "FeatureCollection",
-    features: zoneRows.map((z): ZoneFeature => {
-      // geom may be WKT or a GeoJSON geometry string depending on how it was
-      // stored; the processor accepts GeoJSON FeatureCollections with arbitrary
-      // geometry strings via OGR — parse if it looks like JSON, else pass as-is.
-      let geometry: ZoneFeature["geometry"];
-      try {
-        const parsed = JSON.parse(z.geom) as ZoneFeature["geometry"];
-        geometry = parsed;
-      } catch {
-        // WKT fallback: wrap as an opaque string the processor handles via OGR
-        geometry = { type: "Unknown", coordinates: z.geom };
-      }
-      return {
-        type: "Feature",
-        geometry,
-        properties: {
-          // zone_aggregates[].zone_id echoes back this id
-          id: z.id,
-          name: z.name,
-          kind: z.kind,
-        },
-      };
-    }),
+    features: zoneRows.map((z): ZoneFeature => ({
+      type: "Feature",
+      geometry: parseZoneGeom(z),
+      properties: {
+        // zone_aggregates[].zone_id echoes back this id
+        id: z.id,
+        name: z.name,
+        kind: z.kind,
+      },
+    })),
   };
 }
 

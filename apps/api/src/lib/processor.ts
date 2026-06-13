@@ -107,6 +107,23 @@ function resolvePlan(opts: RunProcessorOptions): ProcStep[] {
 }
 
 /**
+ * Verify every output path in the manifest resolves under opts.outDir.
+ * Defense-in-depth: a misbehaving processor must not write outside the temp dir.
+ */
+function assertPathsWithinOutDir(manifest: Manifest, outDir: string): void {
+  const resolvedOut = path.resolve(outDir) + path.sep;
+  for (const idx of manifest.indices) {
+    for (const p of [idx.raster_path, idx.overlay_png]) {
+      if (!path.resolve(p).startsWith(resolvedOut)) {
+        throw new Error(
+          `Processor output path escapes outDir: ${p} (outDir: ${outDir})`,
+        );
+      }
+    }
+  }
+}
+
+/**
  * runProcessor — run the index processor (Rust super-raster, falling back to the
  * Python GDAL script) and return its validated manifest.
  */
@@ -117,7 +134,9 @@ export async function runProcessor(opts: RunProcessorOptions): Promise<Manifest>
   for (let i = 0; i < plan.length; i++) {
     const step = plan[i]!;
     try {
-      return await spawnAndParse(step);
+      const manifest = await spawnAndParse(step);
+      assertPathsWithinOutDir(manifest, opts.outDir);
+      return manifest;
     } catch (err) {
       lastErr = err;
       const next = plan[i + 1];

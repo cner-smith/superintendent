@@ -7,16 +7,18 @@
  * Also serves GET /parcels/:id/zones/:zoneId/timeseries for issue #6.
  */
 import { Hono } from "hono";
+import { z } from "zod";
 import { db } from "../lib/db.js";
 import { parcels, zones, flights, zoneIndexAggregates } from "@superintendent/db";
 import { eq, sql, asc } from "drizzle-orm";
 import { withAudit } from "../lib/audit.js";
+import { UUID_RE, isUuid } from "../lib/ids.js";
 import { createFlightHandler } from "./flights.js";
 
 export const parcelsRouter = new Hono();
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Re-export so consumers (e.g. routes/flights.ts) can import from one place.
+export { UUID_RE };
 
 /** Map a route :id to a real parcel UUID; non-UUID falls back to the sole v0.1 parcel. */
 export async function resolveParcelId(id: string): Promise<string | null> {
@@ -56,15 +58,22 @@ parcelsRouter.get("/:id/zones", async (c) => {
   return c.json({ data: rows });
 });
 
+const zoneBodySchema = z.object({
+  name: z.string().min(1).max(255),
+  kind: z.enum(["bed", "lawn", "native_border", "rough", "green", "other"]),
+  geom: z.string().min(1),
+});
+
 /** POST /parcels/:id/zones — create a zone from a GeoJSON polygon string. */
 parcelsRouter.post("/:id/zones", async (c) => {
   const parcelId = await resolveParcelId(c.req.param("id"));
   if (!parcelId) return c.json({ error: "no parcel for id" }, 404);
-  const body = await c.req.json<{
-    name: string;
-    kind: "bed" | "lawn" | "native_border" | "rough" | "green" | "other";
-    geom: string;
-  }>();
+
+  const parsed = zoneBodySchema.safeParse(await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message ?? "invalid body" }, 400);
+  }
+  const body = parsed.data;
 
   // Actor placeholder — replace with real auth principal in Phase 2.
   const actor = c.req.header("x-actor") ?? "anonymous";
@@ -119,6 +128,7 @@ parcelsRouter.get("/:id/zones/:zoneId/timeseries", async (c) => {
   if (!parcelId) return c.json({ data: {} });
 
   const zoneId = c.req.param("zoneId");
+  if (!isUuid(zoneId)) return c.json({ data: {} });
 
   const rows = await db
     .select({
