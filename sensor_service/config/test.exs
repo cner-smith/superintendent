@@ -21,6 +21,10 @@ config :sensor_service, SensorServiceWeb.Endpoint,
   secret_key_base: "e4c4a/3oc/Iv3GqNXQcPV9EpWeUeB1GX1q5DdnJDfapn6WlSalGKLOO2vzlClNLQ",
   server: false
 
+# Do not start the MQTT broker clients or simulated publisher in test.
+# Tests exercise insert_reading/1 and the subscriber handler directly.
+config :sensor_service, start_mqtt: false
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

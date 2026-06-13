@@ -9,7 +9,12 @@ import Config
 
 config :sensor_service,
   ecto_repos: [SensorService.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  mqtt: [
+    host: System.get_env("MQTT_HOST", "localhost"),
+    port: String.to_integer(System.get_env("MQTT_PORT", "1883"))
+  ],
+  start_mqtt: true
 
 # Configure the endpoint
 config :sensor_service, SensorServiceWeb.Endpoint,
