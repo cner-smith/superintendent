@@ -12,3 +12,7 @@ uploads/
 # AI/Claude working docs — keep out of the repo (project rule)
 docs/superpowers/
 .claude/
+
+# Erlang crash dumps
+erl_crash.dump
+*.dump
