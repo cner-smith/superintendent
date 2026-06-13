@@ -1,0 +1,39 @@
+# Publishes the vision handoff (docs/design/superintendent-handoff.html) to GitHub
+# Pages as the site root, so partners get a shareable link with no setup.
+# Single source of truth = the handoff in the repo; this just copies it to index.html.
+name: Deploy vision doc to Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/design/superintendent-handoff.html"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp docs/design/superintendent-handoff.html _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
